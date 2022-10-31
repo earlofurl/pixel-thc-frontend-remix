@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  pxthcfrontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: pxthc-frontend
+    volumes:
+      - .:/app
+    restart: always
+    command: npm run dev
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+networks:
+  default:
+    name: pixel-thc-nestjs_default
+    external: true
