@@ -131,7 +131,7 @@ export default function BackendDash(): JSX.Element {
 							leave="transition ease-in-out duration-300 transform"
 							leaveFrom="translate-x-0"
 							leaveTo="-translate-x-full">
-							<Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-indigo-700 pt-5 pb-4">
+							<Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-slate-800 pt-5 pb-4">
 								<Transition.Child
 									as={Fragment}
 									enter="ease-in-out duration-300"
@@ -163,28 +163,36 @@ export default function BackendDash(): JSX.Element {
 								<div className="mt-5 h-0 flex-1 overflow-y-auto px-2">
 									<nav className="flex h-full min-h-screen flex-col">
 										<div className="space-y-1">
+											{/* Mobile sidebar nav menu items */}
 											{sidebarNavigation.map((item) => (
-												<a
+												<NavLink
 													key={item.name}
-													href={item.href}
-													className={classNames(
-														item.current
-															? 'bg-indigo-800 text-white'
-															: 'text-indigo-100 hover:bg-indigo-800 hover:text-white',
-														'group flex items-center rounded-md py-2 px-3 text-sm font-medium',
-													)}
-													aria-current={item.current ? 'page' : undefined}>
-													<item.icon
-														className={classNames(
-															item.current
-																? 'text-white'
-																: 'text-indigo-300 group-hover:text-white',
-															'mr-3 h-6 w-6',
-														)}
-														aria-hidden="true"
-													/>
-													<span>{item.name}</span>
-												</a>
+													to={item.to}
+													className={({ isActive }) =>
+														isActive
+															? selectedNavLinkClass
+															: unselectedNavLinkClass
+													}
+													aria-current={({ isActive }) => {
+														return isActive ? 'page' : undefined
+													}}>
+													{({ isActive }) =>
+														isActive ? (
+															<>
+																<item.icon
+																	className={'h-6 w-6 text-white'}
+																	aria-hidden="true"
+																/>{' '}
+																<span className="mt-2">{item.name}</span>
+															</>
+														) : (
+															<>
+																<item.icon className="h-6 w-6 text-indigo-300 group-hover:text-white" />{' '}
+																<span className="mt-2">{item.name}</span>
+															</>
+														)
+													}
+												</NavLink>
 											))}
 										</div>
 									</nav>
@@ -301,3 +309,19 @@ export default function BackendDash(): JSX.Element {
 		</div>
 	)
 }
+
+// className={classNames(
+// 		item.current
+// 		? 'bg-indigo-800 text-white'
+// 		: 'text-indigo-100 hover:bg-indigo-800 hover:text-white',
+// 	'group flex items-center rounded-md py-2 px-3 text-sm font-medium',
+// )}
+// aria-current={item.current ? 'page' : undefined}>
+// 	<item.icon
+// className={classNames(
+// 		item.current
+// 		? 'text-white'
+// 		: 'text-indigo-300 group-hover:text-white',
+// 	'mr-3 h-6 w-6',
+// )}
+// aria-hidden="true"
