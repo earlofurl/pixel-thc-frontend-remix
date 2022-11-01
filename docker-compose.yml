@@ -8,8 +8,10 @@ services:
     container_name: pxthc-frontend
     volumes:
       - .:/app
-    restart: always
+    restart: if-failed
     command: npm run dev
+    expose:
+      - 8069
     ports:
       - 3000:3000
     env_file:
