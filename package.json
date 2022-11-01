@@ -8,7 +8,7 @@
     "dev": "run-p dev:*",
     "dev:css": "npm run generate:css -- --watch",
     "dev:remix": "cross-env NODE_ENV=development binode --require ./mocks -- @remix-run/dev:remix dev",
-    "generate:css": "tailwindcss -w -i ./app/styles/app.css -o ./styles/tailwind.css",
+    "generate:css": "tailwindcss -i ./app/styles/app.css -o ./app/styles/tailwind.css",
     "start": "remix-serve build",
     "format": "prettier --write .",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
