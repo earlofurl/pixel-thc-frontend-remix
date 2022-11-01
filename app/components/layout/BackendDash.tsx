@@ -170,8 +170,8 @@ export default function BackendDash(): JSX.Element {
 													to={item.to}
 													className={({ isActive }) =>
 														isActive
-															? selectedNavLinkClass
-															: unselectedNavLinkClass
+															? 'group flex items-center rounded-md bg-slate-700 py-2 px-3 text-sm font-medium text-white'
+															: 'group flex items-center rounded-md py-2 px-3 text-sm font-medium text-indigo-100 hover:bg-indigo-700/50 hover:text-white'
 													}
 													aria-current={({ isActive }) => {
 														return isActive ? 'page' : undefined
@@ -180,14 +180,14 @@ export default function BackendDash(): JSX.Element {
 														isActive ? (
 															<>
 																<item.icon
-																	className={'h-6 w-6 text-white'}
+																	className={'mr-3 h-6 w-6 text-white'}
 																	aria-hidden="true"
 																/>{' '}
 																<span className="mt-2">{item.name}</span>
 															</>
 														) : (
 															<>
-																<item.icon className="h-6 w-6 text-indigo-300 group-hover:text-white" />{' '}
+																<item.icon className="mr-3 h-6 w-6 text-indigo-300 group-hover:text-white" />{' '}
 																<span className="mt-2">{item.name}</span>
 															</>
 														)
