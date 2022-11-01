@@ -101,8 +101,10 @@ export default function InventoryIndex(): JSX.Element {
 							}
 							return (
 								<>
-									<span>{value.slice(0, 19)}</span>
-									<span className="fonts font-bold">{value.slice(19, 24)}</span>
+									{/*<span>{value.slice(0, 19)}</span>*/}
+									<span className="fonts font-semibold">
+										{value.slice(19, 24)}
+									</span>
 								</>
 							)
 						},
@@ -136,6 +138,10 @@ export default function InventoryIndex(): JSX.Element {
 				),
 				columnHelper.accessor((row: any) => `${row.item.strain?.name}`, {
 					id: 'strain',
+					cell: (info) => {
+						const value = info.getValue() as string
+						return <span className="fonts font-semibold">{value}</span>
+					},
 					header: () => <span>Strain</span>,
 					enableGrouping: true,
 					enableColumnFilter: true,
