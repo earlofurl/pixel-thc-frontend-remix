@@ -11,3 +11,9 @@ export const sessionStorage = createCookieSessionStorage({
 		maxAge: 15 * 24 * 60 * 60 * 1000,
 	},
 })
+
+export type AuthUser = {
+	id: string
+	role: string
+	username: string
+}

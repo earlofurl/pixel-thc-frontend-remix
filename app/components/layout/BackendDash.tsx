@@ -2,16 +2,14 @@ import { Fragment, useState } from 'react'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import {
 	Bars3BottomLeftIcon,
-	CogIcon,
 	HomeIcon,
-	PhotoIcon,
 	PlusIcon,
 	RectangleStackIcon,
 	Squares2X2Icon,
-	UserGroupIcon,
 	XMarkIcon,
 	FolderIcon,
-	InboxIcon,
+	BeakerIcon,
+	MapPinIcon,
 } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { NavLink, Outlet } from '@remix-run/react'
@@ -36,12 +34,12 @@ const sidebarNavigation = [
 	{
 		name: 'Locations',
 		to: '/org/locations',
-		icon: InboxIcon,
+		icon: MapPinIcon,
 	},
 	{
 		name: 'Labs',
 		to: '/org/lab-tests',
-		icon: InboxIcon,
+		icon: BeakerIcon,
 	},
 ]
 
@@ -55,9 +53,9 @@ function classNames(...classes) {
 }
 
 const selectedNavLinkClass =
-	'bg-indigo-800 text-white group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium'
+	'bg-slate-700 text-white group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium'
 const unselectedNavLinkClass =
-	'group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium text-indigo-100 hover:bg-indigo-800 hover:text-white'
+	'group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium text-indigo-100 hover:bg-indigo-700/50 hover:text-white'
 
 export default function BackendDash(): JSX.Element {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -65,7 +63,7 @@ export default function BackendDash(): JSX.Element {
 	return (
 		<div className="flex h-full min-h-screen">
 			{/* Narrow sidebar */}
-			<div className="hidden w-28 overflow-y-auto bg-indigo-700 md:block">
+			<div className="hidden w-28 overflow-y-auto bg-slate-800 md:block">
 				<div className="flex w-full flex-col items-center py-6">
 					<div className="flex flex-shrink-0 items-center">
 						<img

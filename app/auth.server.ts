@@ -1,17 +1,24 @@
-import { Authenticator } from 'remix-auth'
+import { Authenticator, AuthorizationError } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
-import type { User } from '~/models/types/prisma-model-types'
+import type { AuthUser } from '~/services/session.server'
 import { sessionStorage } from '~/services/session.server'
+import type { Session } from '@remix-run/node'
 
-export let authenticator = new Authenticator<User>(sessionStorage)
+export const authenticator = new Authenticator<string | Error | null>(
+	sessionStorage,
+)
+// {
+// 	sessionKey: 'sessionKey', // keep in sync
+// 		sessionErrorKey: 'sessionErrorKey', // keep in sync
+// },
 
 authenticator.use(
 	new FormStrategy(async ({ form, context }) => {
 		// Here you can use `form` to access and input values from the form.
 		// and also use `context` to access more things from the server
-		let email = form.get('email') // or email... etc
-		let password = form.get('password')
+		let email = form.get('email') as string // or email... etc
+		let password = form.get('password') as string
 
 		// You can validate the inputs however you want
 		invariant(typeof email === 'string', 'email must be a string')
@@ -35,10 +42,18 @@ authenticator.use(
 			body: bodyObject,
 		})
 
-		const user = await userResponse.json()
+		console.log(
+			'userResponse cookie header:',
+			userResponse.headers.get('Set-Cookie'),
+		)
 
-		// And return the user as the Authenticator expects it
-		return user
+		const session = await sessionStorage.getSession(
+			(userResponse.headers.get('Set-Cookie') as string) ?? '',
+		)
+
+		await sessionStorage.commitSession(session)
+
+		return (userResponse.headers.get('Set-Cookie') as string) ?? null
 	}),
 	'email-pass',
 )
