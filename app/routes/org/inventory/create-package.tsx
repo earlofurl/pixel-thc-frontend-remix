@@ -134,11 +134,9 @@ export const action = async ({ request }: ActionArgs) => {
 	).labTests[0].labTestId
 	const tagId = JSON.parse(body.get('tag-object') as string).id
 	const itemId = JSON.parse(body.get('item-object') as string).id
-	const quantity = parseFloat(body.get('quantity') as string)
+	const quantity = body.get('quantity') as string
 	const uomId = JSON.parse(body.get('uom-object') as string).id
-	const newParentQuantity = parseFloat(
-		body.get('new-parent-quantity') as string,
-	)
+	const newParentQuantity = body.get('new-parent-quantity') as string
 
 	const cookieHeader = request.headers.get('Cookie')
 	const session = await sessionStorage.getSession(cookieHeader)
@@ -205,28 +203,22 @@ export default function CreatePackageForm(): JSX.Element {
 	// 		$selectedParentPackage.quantity -
 	// 		packageUnitConverter($selectedParentPackage, $selectedItem, $selectedUom, childQuantity);
 	// }
-	useEffect(() => {
-		if (selectedParentPackage && selectedItem) {
-			setNewParentQuantity(
-				selectedParentPackage?.quantity -
-					packageUnitConverter(
-						selectedParentPackage,
-						selectedItem,
-						selectedUom,
-						quantity,
-					),
-			)
-		}
-	}, [selectedParentPackage, selectedUom, selectedItem, quantityRef])
 
-	// when selectedParentPackage updates, change selectedUom to the uom of the selectedParentPackage
-	useEffect(() => {
-		if (selectedParentPackage) {
-			if (selectedParentPackage?.uom) {
-				setSelectedUom(selectedParentPackage?.uom)
-			}
-		}
-	}, [selectedParentPackage])
+	const calculateNewParentQuantity = (inputQuantity) => {
+		setNewParentQuantity(
+			selectedParentPackage?.quantity -
+				packageUnitConverter({
+					parentPackage: selectedParentPackage,
+					selectedItem,
+					selectedUom,
+					childQuantity: parseFloat(inputQuantity),
+				}),
+		)
+	}
+
+	// function calculateNewParentQuantity() {
+	// 	setNewParentQuantity(selectedParentPackage?.quantity - quantity)
+	// }
 
 	const stats = [
 		{
@@ -301,10 +293,10 @@ export default function CreatePackageForm(): JSX.Element {
 							<h3 className="text-lg font-medium leading-6 text-gray-900">
 								Source Package
 							</h3>
-							<p className="mt-1 text-sm text-gray-500">
-								Start by selecting the existing package the new package
-								originates from.
-							</p>
+							{/*<p className="mt-1 text-sm text-gray-500">*/}
+							{/*	Start by selecting the existing package the new package*/}
+							{/*	originates from.*/}
+							{/*</p>*/}
 						</div>
 
 						{/* Source Package Select */}
@@ -454,7 +446,7 @@ export default function CreatePackageForm(): JSX.Element {
 									</dt>
 									<dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
 										<div className="flex items-baseline text-2xl font-semibold text-indigo-600">
-											{selectedParentPackage?.quantity ?? 0}
+											{newParentQuantity ?? 0}
 											<span className="ml-2 text-sm font-medium text-gray-500">
 												{selectedParentPackage?.uom.name}
 											</span>
@@ -501,9 +493,9 @@ export default function CreatePackageForm(): JSX.Element {
 						<h3 className="text-lg font-medium leading-6 text-gray-900">
 							New Package
 						</h3>
-						<p className="mt-1 text-sm text-gray-500">
-							Enter the information for the package you are creating.
-						</p>
+						{/*<p className="mt-1 text-sm text-gray-500">*/}
+						{/*	Enter the information for the package you are creating.*/}
+						{/*</p>*/}
 					</div>
 					<div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
 						<div className="sm:col-span-4">
@@ -613,6 +605,7 @@ export default function CreatePackageForm(): JSX.Element {
 									id="quantity"
 									onChange={(event) => {
 										setQuantity(parseFloat(event.target.value))
+										calculateNewParentQuantity(event.target.value)
 									}}
 									className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 									placeholder="0.0000"
@@ -633,11 +626,101 @@ export default function CreatePackageForm(): JSX.Element {
 											))}
 										</Listbox.Options>
 									</Listbox>
+									<input
+										type="hidden"
+										name="uom-object"
+										value={JSON.stringify(selectedUom)}
+									/>
 								</div>
 							</div>
 						</div>
 						{/* End Combined Unit of Measure Select*/}
 					</div>
+					{/* New Package Tag Select */}
+					<Combobox
+						as="div"
+						value={selectedPackageTag}
+						onChange={setSelectedPackageTag}>
+						<Combobox.Label className="block text-sm font-medium text-gray-700">
+							Select New Package Tag
+						</Combobox.Label>
+						<div className="relative mt-1">
+							<Combobox.Input
+								className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+								onChange={(event) => {
+									setPackageTagQuery(event.target.value)
+								}}
+								displayValue={(selectedPackageTag: PackageTag) =>
+									selectedPackageTag?.tagNumber
+										? selectedPackageTag?.tagNumber
+										: ''
+								}
+							/>
+							{/* Actual input for ComboBox to avoid having to render selection as ID */}
+							<input
+								type="hidden"
+								name="tag-object"
+								value={JSON.stringify(selectedPackageTag)}
+							/>
+							{/*  */}
+							<Combobox.Button className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+								<ChevronUpDownIcon
+									className="h-5 w-5 text-gray-400"
+									aria-hidden="true"
+								/>
+							</Combobox.Button>
+
+							{filteredTags.length > 0 && (
+								<Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+									{filteredTags.map((tag: PackageTag, tagIdx: number) => (
+										<Combobox.Option
+											key={tagIdx}
+											value={tag}
+											className={({ active }) =>
+												classNames(
+													'relative cursor-default select-none py-2 pl-3 pr-9',
+													active ? 'bg-indigo-600 text-white' : 'text-gray-900',
+												)
+											}>
+											{({ active, selected }) => (
+												<>
+													<div className="flex">
+														<span
+															className={classNames(
+																'block truncate',
+																selected && 'font-semibold',
+															)}>
+															{tag?.tagNumber}
+														</span>
+													</div>
+
+													{selected && (
+														<span
+															className={classNames(
+																'absolute inset-y-0 right-0 flex items-center pr-4',
+																active ? 'text-white' : 'text-indigo-600',
+															)}>
+															<CheckIcon
+																className="h-5 w-5"
+																aria-hidden="true"
+															/>
+														</span>
+													)}
+												</>
+											)}
+										</Combobox.Option>
+									))}
+								</Combobox.Options>
+							)}
+						</div>
+					</Combobox>
+					{/* End Package Tag Select*/}
+					{/* New Parent Package Quantity Hidden Input*/}
+					<input
+						type="hidden"
+						name="new-parent-quantity"
+						value={newParentQuantity}
+					/>
 				</div>
 
 				<div className="pt-5">

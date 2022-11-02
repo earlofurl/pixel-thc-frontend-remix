@@ -96,12 +96,17 @@ export const tenPackToTwoPack = (tenPack: number) => {
 	return tenPack * 5
 }
 
-export const packageUnitConverter = (
-	parentPackage: PackageWithNestedData,
-	selectedItem: ItemWithNesting,
-	selectedUom: Uom,
-	childQuantity: number,
-) => {
+export const packageUnitConverter = ({
+	parentPackage,
+	selectedUom,
+	selectedItem,
+	childQuantity,
+}: {
+	parentPackage: PackageWithNestedData
+	selectedItem: ItemWithNesting
+	selectedUom: Uom
+	childQuantity: number
+}) => {
 	const parentUom = parentPackage.uom
 	const parentQuantity = parentPackage.quantity
 	const childUom = selectedUom
