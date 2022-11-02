@@ -1,4 +1,4 @@
-import { Fragment, useState, useRef, useEffect } from 'react'
+import { Fragment, useState } from 'react'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import {
 	Bars3BottomLeftIcon,
@@ -164,6 +164,7 @@ export default function BackendDash(): JSX.Element {
 									<nav className="flex h-full min-h-screen flex-col">
 										<div className="space-y-1">
 											{/* Mobile sidebar nav menu items */}
+											{/* TODO: Button element is nested wrong so user has to click directly on text instead of div*/}
 											{sidebarNavigation.map((item) => (
 												<NavLink
 													key={item.name}
