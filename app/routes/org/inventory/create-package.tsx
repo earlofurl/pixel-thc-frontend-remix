@@ -22,10 +22,11 @@ import {
 	useNavigate,
 	useTransition,
 } from '@remix-run/react'
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useEffect, useState } from 'react'
 import { authenticator } from '~/auth.server'
 import { sessionStorage } from '~/services/session.server'
 import { ItemWithNesting, PackageWithNestedData } from '~/models/types/custom'
+import { packageUnitConverter } from '~/utils/conversions'
 
 type LoaderData = {
 	error: { message: string } | null
@@ -128,6 +129,9 @@ export const action = async ({ request }: ActionArgs) => {
 	const sourcePackageId = JSON.parse(
 		body.get('parent-package-object') as string,
 	).id
+	const inheritedLabTestIds = JSON.parse(
+		body.get('parent-package-object') as string,
+	).labTests[0].labTestId
 	const tagId = JSON.parse(body.get('tag-object') as string).id
 	const itemId = JSON.parse(body.get('item-object') as string).id
 	const quantity = parseFloat(body.get('quantity') as string)
@@ -145,6 +149,7 @@ export const action = async ({ request }: ActionArgs) => {
 
 	const bodyObject = new URLSearchParams({
 		sourcePackageId,
+		inheritedLabTestIds,
 		tagId,
 		itemId,
 		quantity,
@@ -192,6 +197,26 @@ export default function CreatePackageForm(): JSX.Element {
 	const [quantity, setQuantity] = useState<number>(0)
 	const [uomQuery, setUomQuery] = useState<string>('')
 	const [selectedUom, setSelectedUom] = useState<Uom>(uoms[0])
+	const [newParentQuantity, setNewParentQuantity] = useState<number>(0)
+
+	// $: if ($selectedParentPackage && $selectedUom.name) {
+	// 	parentNewQuantity =
+	// 		$selectedParentPackage.quantity -
+	// 		packageUnitConverter($selectedParentPackage, $selectedItem, $selectedUom, childQuantity);
+	// }
+	useEffect(() => {
+		if (selectedParentPackage) {
+			setNewParentQuantity(
+				selectedParentPackage.quantity -
+					packageUnitConverter(
+						selectedParentPackage,
+						selectedItem,
+						selectedUom,
+						quantity,
+					),
+			)
+		}
+	}, [selectedParentPackage, selectedUom, selectedItem, quantity])
 
 	const stats = [
 		{
@@ -403,53 +428,58 @@ export default function CreatePackageForm(): JSX.Element {
 						{/*	Source Package Info*/}
 						<div>
 							<h3 className="text-lg font-medium leading-6 text-gray-900">
-								Last 30 days
+								{selectedParentPackage?.item?.strain?.name}
+								{' - '}
+								{selectedParentPackage?.item?.itemType?.productForm}
+								{' - '}
+								{selectedParentPackage?.item?.itemType?.productModifier}{' '}
+								{selectedParentPackage?.labTests[0].labTest.batchCode}{' '}
+								{selectedParentPackage?.labTests[0].labTest.thcTotalPercent}
+								{'% '}
 							</h3>
 							<dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-y-0 md:divide-x">
-								{stats.map((item) => (
-									<div key={item.name} className="px-4 py-5 sm:p-6">
-										<dt className="text-base font-normal text-gray-900">
-											{item.name}
-										</dt>
-										<dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
-											<div className="flex items-baseline text-2xl font-semibold text-indigo-600">
-												{item.stat}
-												<span className="ml-2 text-sm font-medium text-gray-500">
-													from {item.previousStat}
-												</span>
-											</div>
+								<div className="px-4 py-5 sm:p-6">
+									<dt className="text-base font-normal text-gray-900">
+										Source Package
+									</dt>
+									<dd className="mt-1 flex items-baseline justify-between md:block lg:flex">
+										<div className="flex items-baseline text-2xl font-semibold text-indigo-600">
+											{selectedParentPackage?.quantity ?? 0}
+											<span className="ml-2 text-sm font-medium text-gray-500">
+												{selectedParentPackage?.uom.name}
+											</span>
+										</div>
 
-											<div
-												className={classNames(
-													item.changeType === 'increase'
-														? 'bg-green-100 text-green-800'
-														: 'bg-red-100 text-red-800',
-													'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0',
-												)}>
-												{item.changeType === 'increase' ? (
-													<ArrowUpIcon
-														className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"
-														aria-hidden="true"
-													/>
-												) : (
-													<ArrowDownIcon
-														className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"
-														aria-hidden="true"
-													/>
-												)}
+										{/*<div*/}
+										{/*	className={classNames(*/}
+										{/*		item.changeType === 'increase'*/}
+										{/*			? 'bg-green-100 text-green-800'*/}
+										{/*			: 'bg-red-100 text-red-800',*/}
+										{/*		'inline-flex items-baseline rounded-full px-2.5 py-0.5 text-sm font-medium md:mt-2 lg:mt-0',*/}
+										{/*	)}>*/}
+										{/*	{item.changeType === 'increase' ? (*/}
+										{/*		<ArrowUpIcon*/}
+										{/*			className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-green-500"*/}
+										{/*			aria-hidden="true"*/}
+										{/*		/>*/}
+										{/*	) : (*/}
+										{/*		<ArrowDownIcon*/}
+										{/*			className="-ml-1 mr-0.5 h-5 w-5 flex-shrink-0 self-center text-red-500"*/}
+										{/*			aria-hidden="true"*/}
+										{/*		/>*/}
+										{/*	)}*/}
 
-												<span className="sr-only">
-													{' '}
-													{item.changeType === 'increase'
-														? 'Increased'
-														: 'Decreased'}{' '}
-													by{' '}
-												</span>
-												{item.change}
-											</div>
-										</dd>
-									</div>
-								))}
+										{/*	<span className="sr-only">*/}
+										{/*		{' '}*/}
+										{/*		{item.changeType === 'increase'*/}
+										{/*			? 'Increased'*/}
+										{/*			: 'Decreased'}{' '}*/}
+										{/*		by{' '}*/}
+										{/*	</span>*/}
+										{/*	{item.change}*/}
+										{/*</div>*/}
+									</dd>
+								</div>
 							</dl>
 						</div>
 						{/* End Source Package Info*/}
