@@ -181,6 +181,7 @@ export default function CreatePackageForm(): JSX.Element {
 	const { packages, packageTags, items, uoms, error } =
 		useLoaderData<LoaderData>()
 	const formRef = React.useRef<HTMLFormElement>(null)
+	const quantityRef = React.useRef<HTMLInputElement>(null)
 	// selected parent package state
 	const [selectedParentPackage, setSelectedParentPackage] =
 		useState<PackageWithNestedData | null>(null)
@@ -205,9 +206,9 @@ export default function CreatePackageForm(): JSX.Element {
 	// 		packageUnitConverter($selectedParentPackage, $selectedItem, $selectedUom, childQuantity);
 	// }
 	useEffect(() => {
-		if (selectedParentPackage) {
+		if (selectedParentPackage && selectedItem) {
 			setNewParentQuantity(
-				selectedParentPackage.quantity -
+				selectedParentPackage?.quantity -
 					packageUnitConverter(
 						selectedParentPackage,
 						selectedItem,
@@ -216,7 +217,16 @@ export default function CreatePackageForm(): JSX.Element {
 					),
 			)
 		}
-	}, [selectedParentPackage, selectedUom, selectedItem, quantity])
+	}, [selectedParentPackage, selectedUom, selectedItem, quantityRef])
+
+	// when selectedParentPackage updates, change selectedUom to the uom of the selectedParentPackage
+	useEffect(() => {
+		if (selectedParentPackage) {
+			if (selectedParentPackage?.uom) {
+				setSelectedUom(selectedParentPackage?.uom)
+			}
+		}
+	}, [selectedParentPackage])
 
 	const stats = [
 		{
@@ -597,9 +607,13 @@ export default function CreatePackageForm(): JSX.Element {
 								</div>
 								<input
 									type="number"
+									ref={quantityRef}
 									step={0.0001}
 									name="quantity"
 									id="quantity"
+									onChange={(event) => {
+										setQuantity(parseFloat(event.target.value))
+									}}
 									className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 									placeholder="0.0000"
 								/>
