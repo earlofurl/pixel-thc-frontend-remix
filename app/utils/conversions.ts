@@ -108,7 +108,7 @@ export const packageUnitConverter = (
 	let convertedQuantity = 0
 
 	switch (parentUom.name.toLowerCase()) {
-		case 'grams':
+		case 'grams': {
 			switch (childUom.name.toLowerCase()) {
 				case 'grams':
 					convertedQuantity = childQuantity
@@ -141,6 +141,7 @@ export const packageUnitConverter = (
 					break
 			}
 			break
+		}
 		case 'ounces':
 			switch (childUom.name.toLowerCase()) {
 				case 'ounces':

@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useRef, useEffect } from 'react'
 import { Dialog, Menu, Transition } from '@headlessui/react'
 import {
 	Bars3BottomLeftIcon,
@@ -12,7 +12,7 @@ import {
 	MapPinIcon,
 } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { NavLink, Outlet } from '@remix-run/react'
+import { Link, NavLink, Outlet } from '@remix-run/react'
 
 const sidebarNavigation = [
 	{ name: 'Dashboard', to: '/org/dashboard', icon: HomeIcon },
@@ -183,12 +183,26 @@ export default function BackendDash(): JSX.Element {
 																	className={'mr-3 h-6 w-6 text-white'}
 																	aria-hidden="true"
 																/>{' '}
-																<span className="mt-2">{item.name}</span>
+																<button
+																	type="button"
+																	onClick={() => {
+																		setMobileMenuOpen(false)
+																	}}
+																	className="mt-2">
+																	{item.name}
+																</button>
 															</>
 														) : (
 															<>
 																<item.icon className="mr-3 h-6 w-6 text-indigo-300 group-hover:text-white" />{' '}
-																<span className="mt-2">{item.name}</span>
+																<button
+																	type="button"
+																	onClick={() => {
+																		setMobileMenuOpen(!mobileMenuOpen)
+																	}}
+																	className="mt-2">
+																	{item.name}
+																</button>
 															</>
 														)
 													}
@@ -265,14 +279,14 @@ export default function BackendDash(): JSX.Element {
 											{userNavigation.map((item) => (
 												<Menu.Item key={item.name}>
 													{({ active }) => (
-														<a
-															href={item.href}
+														<Link
+															to={item.href}
 															className={classNames(
 																active ? 'bg-gray-100' : '',
 																'block px-4 py-2 text-sm text-gray-700',
 															)}>
 															{item.name}
-														</a>
+														</Link>
 													)}
 												</Menu.Item>
 											))}

@@ -168,16 +168,16 @@ export default function AddPackageSlideIn(): JSX.Element {
 
 	// If selectedParentPackageId is passed then set selectedParentPackage to match that ID.
 	const [selectedParentPackage, setSelectedParentPackage] =
-		useState<PackageWithNesting | null>(
+		useState<PackageWithNestedData | null>(
 			selectedParentPackageId
-				? packages.find((invPackage: PackageWithNesting) => {
+				? packages.find((invPackage: PackageWithNestedData) => {
 						return invPackage.id.match(selectedParentPackageId)
 				  })
 				: null,
 		)
 
 	// const [selectedParentPackage, setSelectedParentPackage] =
-	// useState<PackageWithNesting | null>(row ? row : null);
+	// useState<PackageWithNestedData | null>(row ? row : null);
 
 	const [parentQuery, setParentQuery] = useState<string>('')
 
@@ -273,7 +273,7 @@ export default function AddPackageSlideIn(): JSX.Element {
 	const filteredPackages =
 		parentQuery === ''
 			? packages
-			: packages.filter((parentPackage: PackageWithNesting) => {
+			: packages.filter((parentPackage: PackageWithNestedData) => {
 					return parentPackage?.item?.strain?.name
 						?.toLowerCase()
 						.includes(parentQuery.toLowerCase())
@@ -289,7 +289,7 @@ export default function AddPackageSlideIn(): JSX.Element {
 		: items
 	// itemQuery === ""
 	//   ? items
-	//   : items.filter((queryItem: PackageWithNesting) => {
+	//   : items.filter((queryItem: PackageWithNestedData) => {
 	//       return queryItem.strain?.name
 	//         ?.toLowerCase()
 	//         .includes(itemQuery.toLowerCase());
@@ -374,7 +374,7 @@ export default function AddPackageSlideIn(): JSX.Element {
 														setParentQuery(event.target.value)
 													}}
 													displayValue={(
-														selectedParentPackage: PackageWithNesting,
+														selectedParentPackage: PackageWithNestedData,
 													) =>
 														selectedParentPackage?.tag?.tagNumber
 															? selectedParentPackage?.tag?.tagNumber
@@ -401,7 +401,7 @@ export default function AddPackageSlideIn(): JSX.Element {
 													<Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
 														{filteredPackages.map(
 															(
-																parentPackage: PackageWithNesting,
+																parentPackage: PackageWithNestedData,
 																parentPackageIdx: number,
 															) => (
 																<Combobox.Option
