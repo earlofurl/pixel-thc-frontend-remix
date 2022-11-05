@@ -439,7 +439,7 @@ export default function CreatePackageForm(): JSX.Element {
 								{selectedParentPackage?.labTests[0].labTest.thcTotalPercent}
 								{'% '}
 							</h3>
-							<dl className="mt-5 grid grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-y-0 md:divide-x">
+							<dl className="mt-5 grid max-w-lg grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-y-0 md:divide-x">
 								<div className="px-4 py-5 sm:p-6">
 									<dt className="text-base font-normal text-gray-900">
 										Source Package
@@ -586,56 +586,134 @@ export default function CreatePackageForm(): JSX.Element {
 								</div>
 							</Combobox>
 						</div>
-						{/* Combined Unit of Measure Select*/}
-						<div>
-							<label
-								htmlFor="quantity"
-								className="block text-sm font-medium text-gray-700">
-								Quantity
-							</label>
-							<div className="relative mt-1 rounded-md shadow-sm">
-								<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-									{/*<span className="text-gray-500 sm:text-sm">$</span>*/}
-								</div>
-								<input
-									type="number"
-									ref={quantityRef}
-									step={0.0001}
-									name="quantity"
-									id="quantity"
-									onChange={(event) => {
-										setQuantity(parseFloat(event.target.value))
-										calculateNewParentQuantity(event.target.value)
-									}}
-									className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-									placeholder="0.0000"
-								/>
-								<div className="absolute inset-y-0 right-0 flex items-center">
-									<label htmlFor="quantity" className="sr-only">
-										Quantity
-									</label>
-									<Listbox value={selectedUom} onChange={setSelectedUom}>
-										<Listbox.Button className="h-full rounded-md border-gray-200 bg-gray-100 py-0 pl-2 pr-7 text-gray-500 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-											{selectedUom.name ?? ''}
-										</Listbox.Button>
-										<Listbox.Options className="absolute z-10 mt-1 max-h-60 w-24 origin-top-right overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-											{uoms.map((uom) => (
-												<Listbox.Option key={uom.id} value={uom}>
-													{uom.name}
-												</Listbox.Option>
-											))}
-										</Listbox.Options>
-									</Listbox>
-									<input
-										type="hidden"
-										name="uom-object"
-										value={JSON.stringify(selectedUom)}
-									/>
-								</div>
-							</div>
-						</div>
-						{/* End Combined Unit of Measure Select*/}
 					</div>
+					{/* Combined Unit of Measure Select*/}
+					<div>
+						{/* Select UoM Listbox */}
+						<Listbox value={selectedUom} onChange={setSelectedUom}>
+							{({ open }) => (
+								<>
+									<Listbox.Label className="block text-sm font-medium text-gray-700">
+										UoM
+									</Listbox.Label>
+									<div className="relative mt-1">
+										<Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm">
+											<span className="block truncate">{selectedUom.name}</span>
+											<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+												<ChevronUpDownIcon
+													className="h-5 w-5 text-gray-400"
+													aria-hidden="true"
+												/>
+											</span>
+										</Listbox.Button>
+
+										<Transition
+											show={open}
+											as={Fragment}
+											leave="transition ease-in duration-100"
+											leaveFrom="opacity-100"
+											leaveTo="opacity-0">
+											<Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+												{uoms.map((uom) => (
+													<Listbox.Option
+														key={uom.id}
+														className={({ active }) =>
+															classNames(
+																active
+																	? 'bg-indigo-600 text-white'
+																	: 'text-gray-900',
+																'relative cursor-default select-none py-2 pl-3 pr-9',
+															)
+														}
+														value={uom}>
+														{({ selected, active }) => (
+															<>
+																<span
+																	className={classNames(
+																		selected ? 'font-semibold' : 'font-normal',
+																		'block truncate',
+																	)}>
+																	{uom.name}
+																</span>
+
+																{selected ? (
+																	<span
+																		className={classNames(
+																			active ? 'text-white' : 'text-indigo-600',
+																			'absolute inset-y-0 right-0 flex items-center pr-4',
+																		)}>
+																		<CheckIcon
+																			className="h-5 w-5"
+																			aria-hidden="true"
+																		/>
+																	</span>
+																) : null}
+															</>
+														)}
+													</Listbox.Option>
+												))}
+											</Listbox.Options>
+										</Transition>
+									</div>
+								</>
+							)}
+						</Listbox>
+						<input
+							type="hidden"
+							name="uom-object"
+							value={JSON.stringify(selectedUom)}
+						/>
+						{/* End Select UoM Listbox */}
+						{/* Quantity input*/}
+						<label
+							htmlFor="quantity"
+							className="block text-sm font-medium text-gray-700">
+							Quantity
+						</label>
+						<div className="max-w-60 relative mt-1 rounded-md shadow-sm">
+							<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+								{/*<span className="text-gray-500 sm:text-sm">$</span>*/}
+							</div>
+							<input
+								type="number"
+								ref={quantityRef}
+								step={0.0001}
+								name="quantity"
+								id="quantity"
+								onChange={(event) => {
+									setQuantity(parseFloat(event.target.value))
+									calculateNewParentQuantity(event.target.value)
+								}}
+								className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+								placeholder="0.0000"
+							/>
+						</div>
+						{/*End Quantity Input*/}
+
+						{/*<div className="flex items-center">*/}
+						{/*	<label htmlFor="quantity" className="sr-only">*/}
+						{/*		Quantity*/}
+						{/*	</label>*/}
+						{/*	<Listbox value={selectedUom} onChange={setSelectedUom}>*/}
+						{/*		<Listbox.Button className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">*/}
+						{/*			{selectedUom.name ?? ''}*/}
+						{/*		</Listbox.Button>*/}
+						{/*		<Listbox.Options className="absolute z-10 mt-1 max-h-60 w-24 origin-top-right overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">*/}
+						{/*			{uoms.map((uom) => (*/}
+						{/*				<Listbox.Option key={uom.id} value={uom}>*/}
+						{/*					{uom.name}*/}
+						{/*				</Listbox.Option>*/}
+						{/*			))}*/}
+						{/*		</Listbox.Options>*/}
+						{/*	</Listbox>*/}
+						{/*	<input*/}
+						{/*		type="hidden"*/}
+						{/*		name="uom-object"*/}
+						{/*		value={JSON.stringify(selectedUom)}*/}
+						{/*	/>*/}
+						{/*</div>*/}
+					</div>
+					{/* End Combined Unit of Measure Select*/}
 					{/* New Package Tag Select */}
 					<Combobox
 						as="div"
@@ -728,6 +806,7 @@ export default function CreatePackageForm(): JSX.Element {
 						<button
 							type="button"
 							className="rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+							{' '}
 							Cancel
 						</button>
 						<button
