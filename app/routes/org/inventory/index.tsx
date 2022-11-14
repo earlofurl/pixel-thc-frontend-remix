@@ -114,28 +114,6 @@ export default function InventoryIndex(): JSX.Element {
 						enableSorting: true,
 					},
 				),
-				columnHelper.accessor(
-					(row: any) => `${row.item.itemType?.productForm}`,
-					{
-						id: 'productForm',
-						header: () => <span>Form</span>,
-						enableGrouping: true,
-						enableColumnFilter: true,
-						enableGlobalFilter: true,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.item.itemType?.productModifier}`,
-					{
-						id: 'productModifier',
-						header: () => <span>Modifier</span>,
-						enableGrouping: true,
-						enableColumnFilter: true,
-						enableGlobalFilter: true,
-						enableSorting: true,
-					},
-				),
 				columnHelper.accessor((row: any) => `${row.item.strain?.name}`, {
 					id: 'strain',
 					cell: (info) => {
@@ -153,6 +131,28 @@ export default function InventoryIndex(): JSX.Element {
 					{
 						id: 'testBatch',
 						header: () => <span>Batch</span>,
+						enableGrouping: true,
+						enableColumnFilter: true,
+						enableGlobalFilter: true,
+						enableSorting: true,
+					},
+				),
+				columnHelper.accessor(
+					(row: any) => `${row.item.itemType?.productForm}`,
+					{
+						id: 'productForm',
+						header: () => <span>Form</span>,
+						enableGrouping: true,
+						enableColumnFilter: true,
+						enableGlobalFilter: true,
+						enableSorting: true,
+					},
+				),
+				columnHelper.accessor(
+					(row: any) => `${row.item.itemType?.productModifier}`,
+					{
+						id: 'productModifier',
+						header: () => <span>Modifier</span>,
 						enableGrouping: true,
 						enableColumnFilter: true,
 						enableGlobalFilter: true,

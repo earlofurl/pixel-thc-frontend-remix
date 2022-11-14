@@ -366,7 +366,7 @@ export default function SingleOrderPage() {
 							</ul>
 						</div>
 						{/*Line Items*/}
-						<div className="max-w-lg space-y-2">
+						<div className="max-w-full space-y-2">
 							<div className="m-2 bg-white shadow sm:rounded-lg">
 								<BasicGroupingTable
 									tableTitle={tableTitle}

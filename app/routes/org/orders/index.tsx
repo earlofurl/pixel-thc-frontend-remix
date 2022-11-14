@@ -211,8 +211,8 @@ export default function OrderPage(): JSX.Element {
 								<div className="py-1">
 									<Menu.Item>
 										{({ active }) => (
-											<a
-												href="#"
+											<Link
+												to="add"
 												className={classNames(
 													active
 														? 'bg-gray-100 text-gray-900'
@@ -220,7 +220,7 @@ export default function OrderPage(): JSX.Element {
 													'block px-4 py-2 text-sm',
 												)}>
 												Create order
-											</a>
+											</Link>
 										)}
 									</Menu.Item>
 								</div>
@@ -374,14 +374,14 @@ export default function OrderPage(): JSX.Element {
 					{/* Order List */}
 					<div className="flex w-full flex-auto">
 						<div className="w-14 flex-none bg-white ring-1 ring-gray-100" />
-						<div className="grid flex-auto grid-cols-1 grid-rows-1">
+						<div className="grid flex-auto grid-cols-4 grid-rows-1">
 							<div
-								className="col-start-1 col-end-2 row-start-1 grid divide-y divide-gray-100"
+								className="col-start-1 col-end-4 row-start-1 grid divide-y divide-gray-100"
 								style={{
 									gridTemplateRows: 'repeat(auto-fill, minmax(3.5rem, 1fr))',
 								}}>
 								{/* Events */}
-								<ul className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 divide-y divide-gray-200">
+								<ul className="col-start-1 col-end-4 row-start-1 grid divide-y divide-gray-200">
 									{}
 									{orders.map((order: Order) => (
 										<li key={order.id} className="relative mt-1.5 flex">

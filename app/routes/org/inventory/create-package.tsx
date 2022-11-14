@@ -1,12 +1,18 @@
 import { Combobox, Dialog, Listbox, Transition } from '@headlessui/react'
 import {
 	CheckIcon,
+	SelectorIcon,
 	ChevronUpDownIcon,
 	CubeIcon,
 	XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/20/solid'
-import type { Item, PackageTag, Uom } from '~/models/types/prisma-model-types'
+import type {
+	Item,
+	Order,
+	PackageTag,
+	Uom,
+} from '~/models/types/prisma-model-types'
 import type {
 	ActionArgs,
 	ActionFunction,
@@ -34,12 +40,14 @@ type LoaderData = {
 	items: ItemWithNesting[]
 	uoms: Uom[]
 	packageTags: PackageTag[]
+	orders: Order[]
 }
 
 type ActionData = {
 	errors?: {
 		quantity?: string
 		newParentQuantity?: string
+		orderId?: string
 	}
 }
 
@@ -113,11 +121,26 @@ export const loader = async ({ request }: LoaderArgs) => {
 		},
 	})
 
+	const ordersResponse = await fetch(
+		`${process.env.API_BASE_URL}/api/v1/orders/open`,
+		{
+			method: 'GET',
+			mode: 'cors',
+			credentials: 'include',
+			referrerPolicy: 'strict-origin-when-cross-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: await session.data.user,
+			},
+		},
+	)
+
 	const packages = await packagesResponse.json()
 	const packageTags = await packageTagsResponse.json()
 	const items = await itemsResponse.json()
 	const uoms = await uomsResponse.json()
-	return json<LoaderData>({ packages, packageTags, items, uoms, error })
+	const orders = await ordersResponse.json()
+	return json<LoaderData>({ packages, packageTags, items, uoms, orders, error })
 }
 
 export const action = async ({ request }: ActionArgs) => {
@@ -136,6 +159,7 @@ export const action = async ({ request }: ActionArgs) => {
 	const itemId = JSON.parse(body.get('item-object') as string).id
 	const quantity = body.get('quantity') as string
 	const uomId = JSON.parse(body.get('uom-object') as string).id
+	const orderId = JSON.parse(body.get('order-object') as string).id
 	const newParentQuantity = body.get('new-parent-quantity') as string
 
 	const cookieHeader = request.headers.get('Cookie')
@@ -152,6 +176,7 @@ export const action = async ({ request }: ActionArgs) => {
 		itemId,
 		quantity,
 		uomId,
+		orderId,
 		newParentQuantity,
 	}).toString()
 
@@ -176,7 +201,7 @@ export const action = async ({ request }: ActionArgs) => {
 }
 
 export default function CreatePackageForm(): JSX.Element {
-	const { packages, packageTags, items, uoms, error } =
+	const { packages, packageTags, items, uoms, orders, error } =
 		useLoaderData<LoaderData>()
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const quantityRef = React.useRef<HTMLInputElement>(null)
@@ -197,6 +222,8 @@ export default function CreatePackageForm(): JSX.Element {
 	const [uomQuery, setUomQuery] = useState<string>('')
 	const [selectedUom, setSelectedUom] = useState<Uom>(uoms[0])
 	const [newParentQuantity, setNewParentQuantity] = useState<number>(0)
+
+	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
 	// $: if ($selectedParentPackage && $selectedUom.name) {
 	// 	parentNewQuantity =
@@ -800,6 +827,84 @@ export default function CreatePackageForm(): JSX.Element {
 						value={newParentQuantity}
 					/>
 				</div>
+
+				{/* Select Order to Add Listbox */}
+				<Listbox value={selectedOrder} onChange={setSelectedOrder}>
+					{({ open }) => (
+						<>
+							<Listbox.Label className="block text-sm font-medium text-gray-700">
+								Add to Order (Optional)
+							</Listbox.Label>
+							<div className="relative mt-1">
+								<Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm">
+									<span className="block truncate">
+										{selectedOrder?.customerName ?? 'Select an Order'}
+									</span>
+									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+										<ChevronUpDownIcon
+											className="h-5 w-5 text-gray-400"
+											aria-hidden="true"
+										/>
+									</span>
+								</Listbox.Button>
+
+								<Transition
+									show={open}
+									as={Fragment}
+									leave="transition ease-in duration-100"
+									leaveFrom="opacity-100"
+									leaveTo="opacity-0">
+									<Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+										{orders.map((order) => (
+											<Listbox.Option
+												key={order.id}
+												className={({ active }) =>
+													classNames(
+														active
+															? 'bg-indigo-600 text-white'
+															: 'text-gray-900',
+														'relative cursor-default select-none py-2 pl-3 pr-9',
+													)
+												}
+												value={order}>
+												{({ selected, active }) => (
+													<>
+														<span
+															className={classNames(
+																selected ? 'font-semibold' : 'font-normal',
+																'block truncate',
+															)}>
+															{order.customerName}
+														</span>
+
+														{selected ? (
+															<span
+																className={classNames(
+																	active ? 'text-white' : 'text-indigo-600',
+																	'absolute inset-y-0 right-0 flex items-center pr-4',
+																)}>
+																<CheckIcon
+																	className="h-5 w-5"
+																	aria-hidden="true"
+																/>
+															</span>
+														) : null}
+													</>
+												)}
+											</Listbox.Option>
+										))}
+									</Listbox.Options>
+								</Transition>
+							</div>
+						</>
+					)}
+				</Listbox>
+				<input
+					type="hidden"
+					name="order-object"
+					value={JSON.stringify(selectedOrder)}
+				/>
+				{/* End Select UoM Listbox */}
 
 				<div className="pt-5">
 					<div className="flex justify-end">
