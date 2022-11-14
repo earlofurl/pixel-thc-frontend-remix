@@ -159,7 +159,12 @@ export const action = async ({ request }: ActionArgs) => {
 	const itemId = JSON.parse(body.get('item-object') as string).id
 	const quantity = body.get('quantity') as string
 	const uomId = JSON.parse(body.get('uom-object') as string).id
-	const orderId = JSON.parse(body.get('order-object') as string).id
+	// let orderId = null
+	// if (JSON.parse(body.get('order-object') as string).id) {
+	// 	orderId = JSON.parse(body.get('order-object') as string).id
+	// }
+	const orderId = JSON.parse(body.get('order-object') as string)?.id ?? null
+	const pricePerUnit = body.get('price-per-unit') as string
 	const newParentQuantity = body.get('new-parent-quantity') as string
 
 	const cookieHeader = request.headers.get('Cookie')
@@ -177,6 +182,7 @@ export const action = async ({ request }: ActionArgs) => {
 		quantity,
 		uomId,
 		orderId,
+		pricePerUnit,
 		newParentQuantity,
 	}).toString()
 
@@ -205,6 +211,7 @@ export default function CreatePackageForm(): JSX.Element {
 		useLoaderData<LoaderData>()
 	const formRef = React.useRef<HTMLFormElement>(null)
 	const quantityRef = React.useRef<HTMLInputElement>(null)
+	const priceRef = React.useRef<HTMLInputElement>(null)
 	// selected parent package state
 	const [selectedParentPackage, setSelectedParentPackage] =
 		useState<PackageWithNestedData | null>(null)
@@ -224,6 +231,7 @@ export default function CreatePackageForm(): JSX.Element {
 	const [newParentQuantity, setNewParentQuantity] = useState<number>(0)
 
 	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+	const [pricePerUnit, setPricePerUnit] = useState<number>(0)
 
 	// $: if ($selectedParentPackage && $selectedUom.name) {
 	// 	parentNewQuantity =
@@ -904,7 +912,33 @@ export default function CreatePackageForm(): JSX.Element {
 					name="order-object"
 					value={JSON.stringify(selectedOrder)}
 				/>
-				{/* End Select UoM Listbox */}
+				{/* End Select Order to Add Listbox */}
+
+				{/* Price per Unit input*/}
+				<label
+					htmlFor="price"
+					className="block text-sm font-medium text-gray-700">
+					Price per Unit
+				</label>
+				<div className="max-w-60 relative mt-1 rounded-md shadow-sm">
+					<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+						{/*<span className="text-gray-500 sm:text-sm">$</span>*/}
+					</div>
+					<input
+						type="number"
+						ref={priceRef}
+						step={0.0001}
+						name="price"
+						id="price"
+						onChange={(event) => {
+							setPricePerUnit(parseFloat(event.target.value))
+						}}
+						className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+						placeholder="0.0000"
+					/>
+				</div>
+				<input type="hidden" name="price-per-unit" value={pricePerUnit} />
+				{/*End Price per Unit Input*/}
 
 				<div className="pt-5">
 					<div className="flex justify-end">

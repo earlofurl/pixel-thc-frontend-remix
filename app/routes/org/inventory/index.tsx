@@ -34,7 +34,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 	) as LoaderData['error']
 
 	const packagesResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/packages`,
+		`${process.env.API_BASE_URL}/api/v1/packages/available`,
 		{
 			method: 'GET',
 			mode: 'cors',
