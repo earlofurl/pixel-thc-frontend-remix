@@ -1,7 +1,6 @@
 import { Combobox, Dialog, Listbox, Transition } from '@headlessui/react'
 import {
 	CheckIcon,
-	SelectorIcon,
 	ChevronUpDownIcon,
 	CubeIcon,
 	XMarkIcon,
