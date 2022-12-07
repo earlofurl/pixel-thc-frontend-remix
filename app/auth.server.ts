@@ -31,29 +31,41 @@ authenticator.use(
 		// And if you have a password you should hash it
 		// let hashedPassword = await hash(password)
 
-		const bodyObject = new URLSearchParams({ email, password }).toString()
+		// const bodyObject = new URLSearchParams({ email, password }).toString()
+
+		const bodyObject = JSON.stringify({ email, password })
+		console.log('bodyObject', bodyObject)
 
 		// And finally, you can find, or create, the user
-		const userResponse = await fetch(`${process.env.API_BASE_URL}/auth/login`, {
+		const userResponse = await fetch(`${process.env.API_BASE_URL}/users/login`, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
+				'Content-Type': 'application/json',
 			},
 			body: bodyObject,
 		})
 
-		console.log(
-			'userResponse cookie header:',
-			userResponse.headers.get('Set-Cookie'),
-		)
+		// console.log(
+		// 	'userResponse cookie header:',
+		// 	userResponse.headers.get('set-cookie'),
+		// )
+
+		// console log userResponse body JSON object
+		const userResponseBody = await userResponse.json()
+		console.log('userResponseBody', userResponseBody)
+
+		// const session = await sessionStorage.getSession(
+		// 	(userResponse.headers.get('Set-Cookie') as string) ?? '',
+		// )
 
 		const session = await sessionStorage.getSession(
-			(userResponse.headers.get('Set-Cookie') as string) ?? '',
+			userResponseBody.access_token as string ?? null
 		)
 
 		await sessionStorage.commitSession(session)
 
-		return (userResponse.headers.get('Set-Cookie') as string) ?? null
+		// return (userResponse.headers.get('Set-Cookie') as string) ?? null
+		return userResponseBody.access_token as string ?? null
 	}),
 	'email-pass',
 )
