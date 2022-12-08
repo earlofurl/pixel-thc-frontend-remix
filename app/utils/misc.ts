@@ -19,13 +19,12 @@ export async function hashPassword(password: string) {
 }
 
 export type User = {
-	id: string
-	providerId?: string
 	username: string
-	firstName?: string
-	lastName?: string
+	first_name: string
+	last_name: string
 	email: string
-	password?: string
-	phone?: string
-	role: Role
+	phone: string
+	role: string
+	password_changed_at: string
+	created_at: string
 }

@@ -1,13 +1,15 @@
 import type { ActionArgs, LoaderArgs } from '@remix-run/node'
 import type { User } from '~/models/types/prisma-model-types'
 import { json } from '@remix-run/node'
-import { Form } from '@remix-run/react'
+import { Form, useLoaderData } from '@remix-run/react'
 import { LockClosedIcon } from '@heroicons/react/20/solid'
 import { authenticator } from '~/auth.server'
+import { sessionStorage } from '~/services/session.server'
 
-type LoaderData = {
-	error: { message: string } | null
-}
+// type LoaderData = {
+// 	error: { message: string } | null
+// }
+type LoaderError = { message: string } | null;
 
 // Second, we need to export an action function, here we will use the
 // `authenticator.authenticate method`
@@ -26,12 +28,18 @@ export async function action({ request }: ActionArgs) {
 // dashboard if it is or return null if it's not
 export async function loader({ request }: LoaderArgs) {
 	// If the user is already authenticated redirect to /dashboard directly
-	return authenticator.isAuthenticated(request, {
-		successRedirect: '/org/dashboard',
-	})
+	await authenticator.isAuthenticated(request, { successRedirect: '/org/dashboard' })
+	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+	const error = session.get(authenticator.sessionErrorKey) as LoaderError
+	return json({ error })
+	// return authenticator.isAuthenticated(request, {
+	// 	successRedirect: '/org/dashboard',
+	// })
 }
 
 export default function LoginPage(): JSX.Element {
+	const { error } = useLoaderData<typeof loader>();
+
 	return (
 		<>
 			<div className="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -46,6 +54,7 @@ export default function LoginPage(): JSX.Element {
 							Sign in to your account
 						</h2>
 					</div>
+					{error ? <div>{error.message}</div> : null}
 					<Form className="mt-8 space-y-6" action="#" method="post">
 						{/*<input type="hidden" name="remember" defaultValue="true" />*/}
 						<div className="-space-y-px rounded-md shadow-sm">

@@ -1,7 +1,7 @@
 import type { LoaderArgs } from '@remix-run/node'
 import type { PackageWithNestedData } from '~/models/types/custom'
 import { authenticator } from '~/auth.server'
-import { sessionStorage } from '~/services/session.server'
+import { SessionObject } from '~/services/session.server'
 import { json } from '@remix-run/node'
 import { PlusIcon } from '@heroicons/react/20/solid'
 import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react'
@@ -16,25 +16,18 @@ const tableDescription = 'List of all product inventory'
 const columnHelper = createColumnHelper<PackageWithNestedData>()
 
 type LoaderData = {
+	session: SessionObject
 	packages: PackageWithNestedData[]
 	error: { message: string } | null
 }
 
-// My first successful attempt at syncing the session between front and back
 export const loader = async ({ request }: LoaderArgs) => {
-	await authenticator.isAuthenticated(request, {
+	const session = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
 
-	const cookieHeader = request.headers.get('Cookie')
-	const session = await sessionStorage.getSession(cookieHeader)
-
-	const error = session.get(
-		authenticator.sessionErrorKey,
-	) as LoaderData['error']
-
 	const packagesResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/packages/available`,
+		`${process.env.API_BASE_URL}/packages`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -42,12 +35,13 @@ export const loader = async ({ request }: LoaderArgs) => {
 			referrerPolicy: 'strict-origin-when-cross-origin',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
+				'Authorization': `Bearer ${session.access_token}`,
 			},
 		},
 	)
 	const packages = await packagesResponse.json()
-	return json<LoaderData>({ packages, error })
+
+	return json<LoaderData>({ session, packages, error: null })
 }
 
 export default function InventoryIndex(): JSX.Element {

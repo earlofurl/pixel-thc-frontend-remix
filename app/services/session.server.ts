@@ -13,7 +13,21 @@ export const sessionStorage = createCookieSessionStorage({
 })
 
 export type AuthUser = {
-	id: string
-	role: string
 	username: string
+	first_name: string
+	last_name: string
+	email: string
+	phone: string
+	role: string
+	password_changed_at: string
+	created_at: string
+}
+
+export type SessionObject = {
+	session_id: string
+	access_token: string
+	access_token_expires_at: string
+	refresh_token: string
+	refresh_token_expires_at: string
+	user: AuthUser
 }

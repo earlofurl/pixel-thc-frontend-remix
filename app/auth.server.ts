@@ -1,17 +1,12 @@
-import { Authenticator, AuthorizationError } from 'remix-auth'
+import { Authenticator } from 'remix-auth'
 import { FormStrategy } from 'remix-auth-form'
 import invariant from 'tiny-invariant'
-import type { AuthUser } from '~/services/session.server'
+import type { SessionObject } from '~/services/session.server'
 import { sessionStorage } from '~/services/session.server'
-import type { Session } from '@remix-run/node'
 
-export const authenticator = new Authenticator<string | Error | null>(
+export const authenticator = new Authenticator<SessionObject>(
 	sessionStorage,
 )
-// {
-// 	sessionKey: 'sessionKey', // keep in sync
-// 		sessionErrorKey: 'sessionErrorKey', // keep in sync
-// },
 
 authenticator.use(
 	new FormStrategy(async ({ form, context }) => {
@@ -31,10 +26,7 @@ authenticator.use(
 		// And if you have a password you should hash it
 		// let hashedPassword = await hash(password)
 
-		// const bodyObject = new URLSearchParams({ email, password }).toString()
-
 		const bodyObject = JSON.stringify({ email, password })
-		console.log('bodyObject', bodyObject)
 
 		// And finally, you can find, or create, the user
 		const userResponse = await fetch(`${process.env.API_BASE_URL}/users/login`, {
@@ -45,27 +37,7 @@ authenticator.use(
 			body: bodyObject,
 		})
 
-		// console.log(
-		// 	'userResponse cookie header:',
-		// 	userResponse.headers.get('set-cookie'),
-		// )
-
-		// console log userResponse body JSON object
-		const userResponseBody = await userResponse.json()
-		console.log('userResponseBody', userResponseBody)
-
-		// const session = await sessionStorage.getSession(
-		// 	(userResponse.headers.get('Set-Cookie') as string) ?? '',
-		// )
-
-		const session = await sessionStorage.getSession(
-			userResponseBody.access_token as string ?? null
-		)
-
-		await sessionStorage.commitSession(session)
-
-		// return (userResponse.headers.get('Set-Cookie') as string) ?? null
-		return userResponseBody.access_token as string ?? null
+		return userResponse.json()
 	}),
 	'email-pass',
 )

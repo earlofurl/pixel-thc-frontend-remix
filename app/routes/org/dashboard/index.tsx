@@ -2,6 +2,8 @@ import type { LoaderArgs } from '@remix-run/node'
 import { authenticator } from '~/auth.server'
 import { CircleStackIcon } from '@heroicons/react/24/outline'
 import ActionGrid from '~/components/ActionGrid'
+import { useLoaderData } from '@remix-run/react'
+import { json } from '@remix-run/node'
 
 const actions = [
 	{
@@ -46,16 +48,26 @@ const actions = [
 	},
 ]
 
+type LoaderData = {
+	error: { message: string } | null
+}
 export async function loader({ request }: LoaderArgs) {
-	return authenticator.isAuthenticated(request, {
+	const session = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
+
+	return json({ session })
 }
 
 export default function Dashboard(): JSX.Element {
+	const { session } = useLoaderData<typeof loader>()
+
 	return (
 		<div className="mx-auto items-center py-8">
 			<ActionGrid actions={actions} />
+			<div className="max-w-lg">
+				<p>Session: {JSON.stringify(session)}</p>
+			</div>
 		</div>
 	)
 }
