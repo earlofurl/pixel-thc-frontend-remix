@@ -36,6 +36,8 @@ export type ActivePackageWithLabs = {
 	updated_at: string
 	tag_id: number
 	package_type: string
+	uom_name: string
+	uom_abbreviation: string
 	is_active: boolean
 	quantity: number
 	notes: string

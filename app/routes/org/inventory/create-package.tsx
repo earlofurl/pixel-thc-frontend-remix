@@ -1,42 +1,20 @@
-import { Combobox, Dialog, Listbox, Transition } from '@headlessui/react'
-import {
-	CheckIcon,
-	ChevronUpDownIcon,
-	CubeIcon,
-	XMarkIcon,
-} from '@heroicons/react/24/outline'
-import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/20/solid'
-import type {
-	Item,
-	Order,
-	PackageTag,
-	Uom,
-} from '~/models/types/prisma-model-types'
-import type {
-	ActionArgs,
-	ActionFunction,
-	LoaderFunction,
-} from '@remix-run/node'
+import { Combobox, Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline'
+import type { Item, Order, PackageTag, Uom } from '~/models/types/standard'
+import { ActivePackageWithLabs } from '~/models/types/custom'
+import type { ActionArgs } from '@remix-run/node'
 import { json, LoaderArgs, redirect } from '@remix-run/node'
-import {
-	Form,
-	useActionData,
-	useCatch,
-	useLoaderData,
-	useLocation,
-	useNavigate,
-	useTransition,
-} from '@remix-run/react'
-import React, { Fragment, useEffect, useState } from 'react'
+import { useCatch, useLoaderData } from '@remix-run/react'
+import React, { Fragment, useState } from 'react'
 import { authenticator } from '~/auth.server'
 import { sessionStorage } from '~/services/session.server'
-import { ItemWithNesting, PackageWithNestedData } from '~/models/types/custom'
+
 import { packageUnitConverter } from '~/utils/conversions'
 
 type LoaderData = {
 	error: { message: string } | null
-	packages: PackageWithNestedData[]
-	items: ItemWithNesting[]
+	packages: ActivePackageWithLabs[]
+	items: Item[]
 	uoms: Uom[]
 	packageTags: PackageTag[]
 	orders: Order[]
@@ -55,20 +33,17 @@ function classNames(...classes: (string | boolean)[]) {
 }
 
 export const loader = async ({ request }: LoaderArgs) => {
-	await authenticator.isAuthenticated(request, {
+	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
 
-	const cookieHeader = request.headers.get('Cookie')
-	const session = await sessionStorage.getSession(cookieHeader)
-
-	const error = session.get(
-		authenticator.sessionErrorKey,
-	) as LoaderData['error']
+	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+	const error = session.get(authenticator.sessionErrorKey)
+	session.set(authenticator.sessionKey, authResponse)
 
 	// TODO: Refactor this to reduce repetition
 	const packagesResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/packages`,
+		`${process.env.API_BASE_URL}/packages/active/all`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -76,13 +51,13 @@ export const loader = async ({ request }: LoaderArgs) => {
 			referrerPolicy: 'strict-origin-when-cross-origin',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
+				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
 	)
 
 	const packageTagsResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/package-tags/false/20`,
+		`${process.env.API_BASE_URL}/package-tags`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -90,49 +65,43 @@ export const loader = async ({ request }: LoaderArgs) => {
 			referrerPolicy: 'strict-origin-when-cross-origin',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
+				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
 	)
 
-	const itemsResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/items/`,
-		{
-			method: 'GET',
-			mode: 'cors',
-			credentials: 'include',
-			referrerPolicy: 'strict-origin-when-cross-origin',
-			headers: {
-				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
-			},
-		},
-	)
-
-	const uomsResponse = await fetch(`${process.env.API_BASE_URL}/api/v1/uom/`, {
+	const itemsResponse = await fetch(`${process.env.API_BASE_URL}/items`, {
 		method: 'GET',
 		mode: 'cors',
 		credentials: 'include',
 		referrerPolicy: 'strict-origin-when-cross-origin',
 		headers: {
 			'Content-Type': 'application/json',
-			Cookie: await session.data.user,
+			Authorization: `Bearer ${authResponse.access_token}`,
 		},
 	})
 
-	const ordersResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/orders/open`,
-		{
-			method: 'GET',
-			mode: 'cors',
-			credentials: 'include',
-			referrerPolicy: 'strict-origin-when-cross-origin',
-			headers: {
-				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
-			},
+	const uomsResponse = await fetch(`${process.env.API_BASE_URL}/uoms`, {
+		method: 'GET',
+		mode: 'cors',
+		credentials: 'include',
+		referrerPolicy: 'strict-origin-when-cross-origin',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	)
+	})
+
+	const ordersResponse = await fetch(`${process.env.API_BASE_URL}/orders`, {
+		method: 'GET',
+		mode: 'cors',
+		credentials: 'include',
+		referrerPolicy: 'strict-origin-when-cross-origin',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${authResponse.access_token}`,
+		},
+	})
 
 	const packages = await packagesResponse.json()
 	const packageTags = await packageTagsResponse.json()
@@ -143,9 +112,16 @@ export const loader = async ({ request }: LoaderArgs) => {
 }
 
 export const action = async ({ request }: ActionArgs) => {
-	await authenticator.isAuthenticated(request, {
+	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
+
+	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+	const error = session.get(
+		authenticator.sessionErrorKey,
+	) as ActionData['error']
+	session.set(authenticator.sessionKey, authResponse)
+
 	const body = await request.formData()
 
 	const sourcePackageId = JSON.parse(
@@ -153,7 +129,7 @@ export const action = async ({ request }: ActionArgs) => {
 	).id
 	const inheritedLabTestIds = JSON.parse(
 		body.get('parent-package-object') as string,
-	).labTests[0].labTestId
+	).labTestIds
 	const tagId = JSON.parse(body.get('tag-object') as string).id
 	const itemId = JSON.parse(body.get('item-object') as string).id
 	const quantity = body.get('quantity') as string
@@ -166,12 +142,8 @@ export const action = async ({ request }: ActionArgs) => {
 	const pricePerUnit = body.get('price-per-unit') as string
 	const newParentQuantity = body.get('new-parent-quantity') as string
 
-	const cookieHeader = request.headers.get('Cookie')
-	const session = await sessionStorage.getSession(cookieHeader)
-
-	const error = session.get(
-		authenticator.sessionErrorKey,
-	) as ActionData['error']
+	// const cookieHeader = request.headers.get('Cookie')
+	// const session = await sessionStorage.getSession(cookieHeader)
 
 	const bodyObject = new URLSearchParams({
 		sourcePackageId,
@@ -185,7 +157,7 @@ export const action = async ({ request }: ActionArgs) => {
 		newParentQuantity,
 	}).toString()
 
-	const response = await fetch(`${process.env.API_BASE_URL}/api/v1/packages`, {
+	const response = await fetch(`${process.env.API_BASE_URL}/packages`, {
 		method: 'POST',
 		mode: 'cors',
 		credentials: 'include',
@@ -213,11 +185,11 @@ export default function CreatePackageForm(): JSX.Element {
 	const priceRef = React.useRef<HTMLInputElement>(null)
 	// selected parent package state
 	const [selectedParentPackage, setSelectedParentPackage] =
-		useState<PackageWithNestedData | null>(null)
+		useState<ActivePackageWithLabs | null>(null)
 	// combobox search query state
 	const [parentQuery, setParentQuery] = useState<string>('')
 
-	const [selectedItem, setSelectedItem] = useState<ItemWithNesting | null>(null)
+	const [selectedItem, setSelectedItem] = useState<Item | null>(null)
 	const [itemQuery, setItemQuery] = useState<string>('')
 
 	const [selectedPackageTag, setSelectedPackageTag] =
@@ -245,7 +217,7 @@ export default function CreatePackageForm(): JSX.Element {
 					parentPackage: selectedParentPackage,
 					selectedItem,
 					selectedUom,
-					childQuantity: parseFloat(inputQuantity),
+					childQuantity: Number.parseFloat(inputQuantity),
 				}),
 		)
 	}
@@ -283,27 +255,27 @@ export default function CreatePackageForm(): JSX.Element {
 		packageTagQuery === ''
 			? packageTags
 			: packageTags.filter((packageTag: PackageTag) => {
-					return packageTag.tagNumber
+					return packageTag.tag_number
 						.toLowerCase()
 						.includes(packageTagQuery.toLowerCase())
 			  })
 
 	// combobox filter for parent package to create new package from
-	const filteredPackages: PackageWithNestedData[] =
+	const filteredPackages: ActivePackageWithLabs[] =
 		parentQuery === ''
 			? packages
-			: packages.filter((parentPackage: PackageWithNestedData) => {
-					return parentPackage?.item?.strain?.name
+			: packages.filter((parentPackage: ActivePackageWithLabs) => {
+					return parentPackage?.strain_name
 						?.toLowerCase()
 						.includes(parentQuery.toLowerCase())
 			  })
 
 	// combobox filter for item type of new package
 	const filteredItems = selectedParentPackage
-		? items.filter((item: ItemWithNesting) => {
-				return item.strain.name
+		? items.filter((item: Item) => {
+				return item?.strain_name
 					.toLowerCase()
-					.includes(selectedParentPackage.item.strain.name.toLowerCase())
+					.includes(selectedParentPackage.strain_name.toLowerCase())
 		  })
 		: items
 
@@ -348,11 +320,11 @@ export default function CreatePackageForm(): JSX.Element {
 										setParentQuery(event.target.value)
 									}}
 									displayValue={(
-										selectedParentPackage: PackageWithNestedData,
+										selectedParentPackage: ActivePackageWithLabs,
 									) =>
-										selectedParentPackage?.tag?.tagNumber
-											? selectedParentPackage?.tag?.tagNumber
-											: selectedParentPackage?.tagId === null
+										selectedParentPackage?.tag_number
+											? selectedParentPackage?.tag_number
+											: selectedParentPackage?.tag_number === null
 											? 'Selected Pckg Has No Tag'
 											: ''
 									}
@@ -375,7 +347,7 @@ export default function CreatePackageForm(): JSX.Element {
 									<Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
 										{filteredPackages.map(
 											(
-												parentPackage: PackageWithNestedData,
+												parentPackage: ActivePackageWithLabs,
 												parentPackageIdx: number,
 											) => (
 												<Combobox.Option
@@ -397,7 +369,7 @@ export default function CreatePackageForm(): JSX.Element {
 																		'block truncate',
 																		selected && 'font-semibold',
 																	)}>
-																	{parentPackage?.item?.strain?.name}
+																	{parentPackage?.strain_name}
 																</span>
 																<span
 																	className={classNames(
@@ -406,7 +378,7 @@ export default function CreatePackageForm(): JSX.Element {
 																			? 'text-indigo-200'
 																			: 'text-gray-500',
 																	)}>
-																	{`${parentPackage?.item?.itemType?.productForm} ${parentPackage?.item?.itemType?.productModifier}`}
+																	{`${parentPackage?.product_form} ${parentPackage?.product_modifier}`}
 																</span>
 																<span
 																	className={classNames(
@@ -415,7 +387,7 @@ export default function CreatePackageForm(): JSX.Element {
 																			? 'text-indigo-200'
 																			: 'text-gray-500',
 																	)}>
-																	{parentPackage?.labTests[0].labTest.batchCode}
+																	{parentPackage?.batch_code}
 																</span>
 															</div>
 															<div className="mt-1 flex">
@@ -426,7 +398,7 @@ export default function CreatePackageForm(): JSX.Element {
 																			? 'text-indigo-200'
 																			: 'text-gray-500',
 																	)}>
-																	{parentPackage?.tag?.tagNumber}
+																	{parentPackage?.tag_number}
 																</span>
 																<span
 																	className={classNames(
@@ -435,7 +407,7 @@ export default function CreatePackageForm(): JSX.Element {
 																			? 'text-indigo-200'
 																			: 'text-gray-500',
 																	)}>
-																	{`${parentPackage?.labTests[0].labTest.thcTotalPercent}%`}
+																	{`${parentPackage?.thc_total_percent}%`}
 																</span>
 															</div>
 
@@ -461,16 +433,17 @@ export default function CreatePackageForm(): JSX.Element {
 							</div>
 						</Combobox>
 						{/* End Source Package Select*/}
+
 						{/*	Source Package Info*/}
 						<div>
 							<h3 className="text-lg font-medium leading-6 text-gray-900">
-								{selectedParentPackage?.item?.strain?.name}
+								{selectedParentPackage?.strain_name}
 								{' - '}
-								{selectedParentPackage?.item?.itemType?.productForm}
+								{selectedParentPackage?.product_form}
 								{' - '}
-								{selectedParentPackage?.item?.itemType?.productModifier}{' '}
-								{selectedParentPackage?.labTests[0].labTest.batchCode}{' '}
-								{selectedParentPackage?.labTests[0].labTest.thcTotalPercent}
+								{selectedParentPackage?.product_modifier}{' '}
+								{selectedParentPackage?.batch_code}{' '}
+								{selectedParentPackage?.thc_total_percent}
 								{'% '}
 							</h3>
 							<dl className="mt-5 grid max-w-lg grid-cols-1 divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow md:grid-cols-3 md:divide-y-0 md:divide-x">
@@ -482,7 +455,7 @@ export default function CreatePackageForm(): JSX.Element {
 										<div className="flex items-baseline text-2xl font-semibold text-indigo-600">
 											{newParentQuantity ?? 0}
 											<span className="ml-2 text-sm font-medium text-gray-500">
-												{selectedParentPackage?.uom.name}
+												{selectedParentPackage?.uom_name}
 											</span>
 										</div>
 
@@ -547,9 +520,9 @@ export default function CreatePackageForm(): JSX.Element {
 										onChange={(event) => {
 											setItemQuery(event.target.value)
 										}}
-										displayValue={(item: ItemWithNesting) =>
-											item?.strain.name
-												? `${item?.itemType.productForm} - ${item?.itemType.productModifier} - ${item?.strain.name}`
+										displayValue={(item: Item) =>
+											item?.strain_name
+												? `${item?.product_form} - ${item?.product_modifier} - ${item?.strain_name}`
 												: ''
 										}
 									/>
@@ -569,52 +542,50 @@ export default function CreatePackageForm(): JSX.Element {
 
 									{filteredItems.length > 0 && (
 										<Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-											{filteredItems.map(
-												(item: ItemWithNesting, itemIdx: number) => (
-													<Combobox.Option
-														key={itemIdx}
-														value={item}
-														className={({ active }) =>
-															classNames(
-																'relative cursor-default select-none py-2 pl-3 pr-9',
-																active
-																	? 'bg-indigo-600 text-white'
-																	: 'text-gray-900',
-															)
-														}>
-														{({ active, selected }) => (
-															<>
-																<div className="flex">
-																	<span
-																		className={classNames(
-																			'block truncate',
-																			selected && 'font-semibold',
-																		)}>
-																		{item?.itemType?.productForm}
-																		{' - '}
-																		{item?.itemType?.productModifier}
-																		{' - '}
-																		{item?.strain?.name}
-																	</span>
-																</div>
+											{filteredItems.map((item: Item, itemIdx: number) => (
+												<Combobox.Option
+													key={itemIdx}
+													value={item}
+													className={({ active }) =>
+														classNames(
+															'relative cursor-default select-none py-2 pl-3 pr-9',
+															active
+																? 'bg-indigo-600 text-white'
+																: 'text-gray-900',
+														)
+													}>
+													{({ active, selected }) => (
+														<>
+															<div className="flex">
+																<span
+																	className={classNames(
+																		'block truncate',
+																		selected && 'font-semibold',
+																	)}>
+																	{item?.product_form}
+																	{' - '}
+																	{item?.product_modifier}
+																	{' - '}
+																	{item?.strain_name}
+																</span>
+															</div>
 
-																{selected && (
-																	<span
-																		className={classNames(
-																			'absolute inset-y-0 right-0 flex items-center pr-4',
-																			active ? 'text-white' : 'text-indigo-600',
-																		)}>
-																		<CheckIcon
-																			className="h-5 w-5"
-																			aria-hidden="true"
-																		/>
-																	</span>
-																)}
-															</>
-														)}
-													</Combobox.Option>
-												),
-											)}
+															{selected && (
+																<span
+																	className={classNames(
+																		'absolute inset-y-0 right-0 flex items-center pr-4',
+																		active ? 'text-white' : 'text-indigo-600',
+																	)}>
+																	<CheckIcon
+																		className="h-5 w-5"
+																		aria-hidden="true"
+																	/>
+																</span>
+															)}
+														</>
+													)}
+												</Combobox.Option>
+											))}
 										</Combobox.Options>
 									)}
 								</div>
@@ -763,8 +734,8 @@ export default function CreatePackageForm(): JSX.Element {
 									setPackageTagQuery(event.target.value)
 								}}
 								displayValue={(selectedPackageTag: PackageTag) =>
-									selectedPackageTag?.tagNumber
-										? selectedPackageTag?.tagNumber
+									selectedPackageTag?.tag_number
+										? selectedPackageTag?.tag_number
 										: ''
 								}
 							/>
@@ -802,7 +773,7 @@ export default function CreatePackageForm(): JSX.Element {
 																'block truncate',
 																selected && 'font-semibold',
 															)}>
-															{tag?.tagNumber}
+															{tag?.tag_number}
 														</span>
 													</div>
 
@@ -845,7 +816,7 @@ export default function CreatePackageForm(): JSX.Element {
 							<div className="relative mt-1">
 								<Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm">
 									<span className="block truncate">
-										{selectedOrder?.customerName ?? 'Select an Order'}
+										{selectedOrder?.customer_name ?? 'Select an Order'}
 									</span>
 									<span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
 										<ChevronUpDownIcon
@@ -881,7 +852,7 @@ export default function CreatePackageForm(): JSX.Element {
 																selected ? 'font-semibold' : 'font-normal',
 																'block truncate',
 															)}>
-															{order.customerName}
+															{order.customer_name}
 														</span>
 
 														{selected ? (

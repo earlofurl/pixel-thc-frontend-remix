@@ -8,7 +8,7 @@ import {
 	EllipsisHorizontalIcon,
 	QuestionMarkCircleIcon,
 } from '@heroicons/react/20/solid'
-import type { Order } from '~/models/types/prisma-model-types'
+import type { Order } from '~/models/types/standard'
 import type { LoaderFunction } from '@remix-run/node'
 import { json, LoaderArgs } from '@remix-run/node'
 import { Link, useCatch, useLoaderData, useNavigate } from '@remix-run/react'
@@ -16,7 +16,7 @@ import dayjs from 'dayjs'
 import React, { Fragment } from 'react'
 import Calendar from 'react-calendar'
 import { authenticator } from '~/auth.server'
-import { sessionStorage } from '~/services/session.server'
+import { SessionObject, sessionStorage } from '~/services/session.server'
 // import { requireAuthSession } from '~/modules/auth/guards'
 // import type { AuthSession } from '~/modules/auth/session.server'
 // import { getAllOrders } from '~/modules/order/queries/get-orders.server'
@@ -31,30 +31,24 @@ function classNames(...classes: (string | boolean)[]) {
 }
 
 export const loader = async ({ request }: LoaderArgs) => {
-	await authenticator.isAuthenticated(request, {
+	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
 
-	const cookieHeader = request.headers.get('Cookie')
-	const session = await sessionStorage.getSession(cookieHeader)
+	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+	const error = session.get(authenticator.sessionErrorKey)
+	session.set(authenticator.sessionKey, authResponse)
 
-	const error = session.get(
-		authenticator.sessionErrorKey,
-	) as LoaderData['error']
-
-	const ordersResponse = await fetch(
-		`${process.env.API_BASE_URL}/api/v1/orders`,
-		{
-			method: 'GET',
-			mode: 'cors',
-			credentials: 'include',
-			referrerPolicy: 'strict-origin-when-cross-origin',
-			headers: {
-				'Content-Type': 'application/json',
-				Cookie: await session.data.user,
-			},
+	const ordersResponse = await fetch(`${process.env.API_BASE_URL}/orders`, {
+		method: 'GET',
+		mode: 'cors',
+		credentials: 'include',
+		referrerPolicy: 'strict-origin-when-cross-origin',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	)
+	})
 
 	const orders = await ordersResponse.json()
 	return json<LoaderData>({ orders, error })
@@ -305,6 +299,8 @@ export default function OrderPage(): JSX.Element {
 			</header>
 			{/* End Page Header */}
 
+			{error ? <div>Error: {error.message}</div> : null}
+
 			{/* Page Content */}
 			<div className="isolate flex flex-auto overflow-hidden bg-white">
 				<div className="flex flex-auto flex-col overflow-auto">
@@ -393,8 +389,8 @@ export default function OrderPage(): JSX.Element {
 														<div className="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
 															<div>
 																<p className="truncate text-xl font-semibold text-gray-700">
-																	{order.customerName
-																		? order.customerName
+																	{order.customer_name
+																		? order.customer_name
 																		: '-'}
 																</p>
 																{/* <p className="mt-2 flex items-center text-sm text-gray-500">*/}
@@ -422,10 +418,10 @@ export default function OrderPage(): JSX.Element {
 																		<time
 																			className="text-md font-semibold text-gray-700"
 																			dateTime={dayjs(
-																				order.scheduledDeliveryDateTime,
+																				order.scheduled_delivery_date_time,
 																			).format('MMM DD YYYY')}>
 																			{dayjs(
-																				order.scheduledDeliveryDateTime,
+																				order.scheduled_delivery_date_time,
 																			).format('MMM DD YYYY')}
 																		</time>
 																	</p>

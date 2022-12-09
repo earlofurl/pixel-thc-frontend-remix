@@ -1,8 +1,5 @@
-import type { Uom } from '~/models/types/prisma-model-types'
-import type {
-	PackageWithNestedData,
-	ItemWithNesting,
-} from '~/models/types/custom'
+import type { ActivePackageWithLabs } from '~/models/types/custom'
+import type { Item, Uom } from '~/models/types/standard'
 
 // General Weight Unit Conversions
 // convert grams to pounds
@@ -12,7 +9,7 @@ export const gramsToPounds = (grams: number) => {
 
 // convert pounds to grams
 export const poundsToGrams = (pounds: number) => {
-	return pounds / 0.00220462
+	return pounds / 0.002_204_62
 }
 
 // convert grams to ounces
@@ -22,7 +19,7 @@ export const gramsToOunces = (grams: number) => {
 
 // convert ounces to grams
 export const ouncesToGrams = (ounces: number) => {
-	return ounces / 0.035274
+	return ounces / 0.035_274
 }
 
 // convert pounds to ounces
@@ -47,12 +44,12 @@ export const kilogramsToGrams = (kilograms: number) => {
 
 // convert pounds to kilograms
 export const poundsToKilograms = (pounds: number) => {
-	return pounds / 2.20462
+	return pounds / 2.204_62
 }
 
 // convert kilograms to pounds
 export const kilogramsToPounds = (kilograms: number) => {
-	return kilograms * 2.20462
+	return kilograms * 2.204_62
 }
 
 // convert ounces to kilograms
@@ -102,215 +99,262 @@ export const packageUnitConverter = ({
 	selectedItem,
 	childQuantity,
 }: {
-	parentPackage: PackageWithNestedData
-	selectedItem: ItemWithNesting
+	parentPackage: ActivePackageWithLabs
+	selectedItem: Item
 	selectedUom: Uom
 	childQuantity: number
 }) => {
-	const parentUom = parentPackage.uom
+	const parentUom = parentPackage.uom_name
 	const parentQuantity = parentPackage.quantity
 	const childUom = selectedUom
 	let convertedQuantity = 0
 
-	switch (parentUom.name.toLowerCase()) {
+	switch (parentUom.toLowerCase()) {
 		case 'grams': {
 			switch (childUom.name.toLowerCase()) {
-				case 'grams':
+				case 'grams': {
 					convertedQuantity = childQuantity
 					break
-				case 'pounds':
+				}
+				case 'pounds': {
 					convertedQuantity = poundsToGrams(childQuantity)
 					break
-				case 'ounces':
+				}
+				case 'ounces': {
 					convertedQuantity = ouncesToGrams(childQuantity)
 					break
-				case 'kilograms':
+				}
+				case 'kilograms': {
 					convertedQuantity = kilogramsToGrams(childQuantity)
 					break
-				case 'each':
-					switch (selectedItem.itemType.productForm.toLowerCase()) {
-						case 'preroll':
-							switch (selectedItem.itemType.productModifier.toLowerCase()) {
-								case 'single':
+				}
+				case 'each': {
+					switch (selectedItem.product_form.toLowerCase()) {
+						case 'preroll': {
+							switch (selectedItem.product_modifier.toLowerCase()) {
+								case 'single': {
 									convertedQuantity = childQuantity * 0.5
 									break
-								case 'twopack':
+								}
+								case 'twopack': {
 									convertedQuantity = childQuantity
 									break
-								case '10-pack':
+								}
+								case '10-pack': {
 									convertedQuantity = childQuantity * 5
 									break
+								}
 							}
 							break
+						}
 					}
 					break
+				}
 			}
 			break
 		}
-		case 'ounces':
+		case 'ounces': {
 			switch (childUom.name.toLowerCase()) {
-				case 'ounces':
+				case 'ounces': {
 					convertedQuantity = childQuantity
 					break
-				case 'pounds':
+				}
+				case 'pounds': {
 					convertedQuantity = poundsToOunces(childQuantity)
 					break
-				case 'grams':
+				}
+				case 'grams': {
 					convertedQuantity = gramsToOunces(childQuantity)
 					break
-				case 'kilograms':
+				}
+				case 'kilograms': {
 					convertedQuantity = kilogramsToOunces(childQuantity)
 					break
-				case 'each':
-					switch (selectedItem.itemType.productForm.toLowerCase()) {
-						case 'preroll':
-							switch (selectedItem.itemType.productModifier.toLowerCase()) {
-								case 'single':
+				}
+				case 'each': {
+					switch (selectedItem.product_form.toLowerCase()) {
+						case 'preroll': {
+							switch (selectedItem.product_modifier.toLowerCase()) {
+								case 'single': {
 									convertedQuantity = gramsToOunces(childQuantity * 0.5)
 									break
-								case 'twopack':
+								}
+								case 'twopack': {
 									convertedQuantity = gramsToOunces(childQuantity)
 									break
-								case '10-pack':
+								}
+								case '10-pack': {
 									convertedQuantity = gramsToOunces(childQuantity * 5)
 									break
+								}
 							}
 							break
+						}
 					}
 					break
+				}
 			}
 			break
-		case 'pounds':
+		}
+		case 'pounds': {
 			switch (childUom.name.toLowerCase()) {
-				case 'pounds':
+				case 'pounds': {
 					convertedQuantity = childQuantity
 					break
-				case 'ounces':
+				}
+				case 'ounces': {
 					convertedQuantity = ouncesToPounds(childQuantity)
 					break
-				case 'grams':
+				}
+				case 'grams': {
 					convertedQuantity = gramsToPounds(childQuantity)
 					break
-				case 'kilograms':
+				}
+				case 'kilograms': {
 					convertedQuantity = kilogramsToPounds(childQuantity)
 					break
-				case 'each':
-					switch (selectedItem.itemType.productForm.toLowerCase()) {
-						case 'preroll':
-							switch (selectedItem.itemType.productModifier.toLowerCase()) {
-								case 'single':
+				}
+				case 'each': {
+					switch (selectedItem.product_form.toLowerCase()) {
+						case 'preroll': {
+							switch (selectedItem.product_modifier.toLowerCase()) {
+								case 'single': {
 									convertedQuantity = gramsToPounds(childQuantity * 0.5)
 									break
-								case 'twopack':
+								}
+								case 'twopack': {
 									convertedQuantity = gramsToPounds(childQuantity)
 									break
-								case '10-pack':
+								}
+								case '10-pack': {
 									convertedQuantity = gramsToPounds(childQuantity * 5)
 									break
+								}
 							}
 							break
+						}
 					}
 					break
+				}
 			}
 			break
-		case 'kilograms':
+		}
+		case 'kilograms': {
 			switch (childUom.name.toLowerCase()) {
-				case 'kilograms':
+				case 'kilograms': {
 					convertedQuantity = childQuantity
 					break
-				case 'ounces':
+				}
+				case 'ounces': {
 					convertedQuantity = ouncesToKilograms(childQuantity)
 					break
-				case 'grams':
+				}
+				case 'grams': {
 					convertedQuantity = gramsToKilograms(childQuantity)
 					break
-				case 'pounds':
+				}
+				case 'pounds': {
 					convertedQuantity = poundsToKilograms(childQuantity)
 					break
-				case 'each':
-					switch (selectedItem.itemType.productForm.toLowerCase()) {
-						case 'preroll':
-							switch (selectedItem.itemType.productModifier.toLowerCase()) {
-								case 'single':
+				}
+				case 'each': {
+					switch (selectedItem.product_form.toLowerCase()) {
+						case 'preroll': {
+							switch (selectedItem.product_modifier.toLowerCase()) {
+								case 'single': {
 									convertedQuantity = gramsToKilograms(childQuantity * 0.5)
 									break
-								case 'twopack':
+								}
+								case 'twopack': {
 									convertedQuantity = gramsToKilograms(childQuantity)
 									break
-								case '10-pack':
+								}
+								case '10-pack': {
 									convertedQuantity = gramsToKilograms(childQuantity * 5)
 									break
+								}
 							}
 							break
+						}
 					}
 					break
+				}
 			}
 			break
+		}
 		// this case for each can get complicated based on item type interactions
-		case 'each':
+		case 'each': {
 			switch (childUom.name.toLowerCase()) {
-				case 'each':
-					switch (parentPackage.item.itemType.productForm.toLowerCase()) {
-						case 'preroll':
-							switch (selectedItem.itemType.productForm.toLowerCase()) {
-								case 'preroll':
+				case 'each': {
+					switch (parentPackage.product_form.toLowerCase()) {
+						case 'preroll': {
+							switch (selectedItem.product_form.toLowerCase()) {
+								case 'preroll': {
 									// parent and child are both prerolls
-									switch (
-										parentPackage.item.itemType.productModifier.toLowerCase()
-									) {
-										case 'single':
-											switch (
-												selectedItem.itemType.productModifier.toLowerCase()
-											) {
-												case 'single':
+									switch (parentPackage.product_modifier.toLowerCase()) {
+										case 'single': {
+											switch (selectedItem.product_modifier.toLowerCase()) {
+												case 'single': {
 													convertedQuantity = childQuantity
 													break
-												case 'twopack':
+												}
+												case 'twopack': {
 													convertedQuantity = twoPackToSingle(childQuantity)
 													break
-												case '10-pack':
+												}
+												case '10-pack': {
 													convertedQuantity = tenPackToSingle(childQuantity)
 													break
+												}
 											}
 											break
-										case 'twopack':
-											switch (
-												selectedItem.itemType.productModifier.toLowerCase()
-											) {
-												case 'twopack':
+										}
+										case 'twopack': {
+											switch (selectedItem.product_modifier.toLowerCase()) {
+												case 'twopack': {
 													convertedQuantity = childQuantity
 													break
-												case 'single':
+												}
+												case 'single': {
 													convertedQuantity = singleToTwoPack(childQuantity)
 													break
-												case '10-pack':
+												}
+												case '10-pack': {
 													convertedQuantity = tenPackToTwoPack(childQuantity)
 													break
+												}
 											}
 											break
-										case '10-pack':
-											switch (
-												selectedItem.itemType.productModifier.toLowerCase()
-											) {
-												case '10-pack':
+										}
+										case '10-pack': {
+											switch (selectedItem.product_modifier.toLowerCase()) {
+												case '10-pack': {
 													convertedQuantity = childQuantity
 													break
-												case 'single':
+												}
+												case 'single': {
 													convertedQuantity = singleToTenPack(childQuantity)
 													break
-												case 'twopack':
+												}
+												case 'twopack': {
 													convertedQuantity = twoPackToTenPack(childQuantity)
 													break
+												}
 											}
 											break
+										}
 									}
 									break
+								}
 							}
 							break
+						}
 					}
 					break
+				}
 			}
 			break
+		}
 	}
 	return convertedQuantity
 }

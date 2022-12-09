@@ -1,7 +1,7 @@
 import type { LoaderArgs } from '@remix-run/node'
 import type { ActivePackageWithLabs } from '~/models/types/custom'
 import { authenticator } from '~/auth.server'
-import { SessionObject } from '~/services/session.server'
+import { SessionObject, sessionStorage } from '~/services/session.server'
 import { json } from '@remix-run/node'
 import { PlusIcon } from '@heroicons/react/20/solid'
 import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react'
@@ -16,15 +16,18 @@ const tableDescription = 'List of all product inventory'
 const columnHelper = createColumnHelper<ActivePackageWithLabs>()
 
 type LoaderData = {
-	session: SessionObject
 	packages: ActivePackageWithLabs[]
 	error: { message: string } | null
 }
 
 export const loader = async ({ request }: LoaderArgs) => {
-	const session = await authenticator.isAuthenticated(request, {
+	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	})
+
+	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+	const error = session.get(authenticator.sessionErrorKey)
+	session.set(authenticator.sessionKey, authResponse)
 
 	const packagesResponse = await fetch(
 		`${process.env.API_BASE_URL}/packages/active/all`,
@@ -35,13 +38,13 @@ export const loader = async ({ request }: LoaderArgs) => {
 			referrerPolicy: 'strict-origin-when-cross-origin',
 			headers: {
 				'Content-Type': 'application/json',
-				Authorization: `Bearer ${session.access_token}`,
+				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
 	)
 	const packages = await packagesResponse.json()
 
-	return json<LoaderData>({ session, packages, error: null })
+	return json<LoaderData>({ packages, error })
 }
 
 export default function InventoryIndex(): JSX.Element {
@@ -242,6 +245,7 @@ export default function InventoryIndex(): JSX.Element {
 					</div>
 				</div>
 			</header>
+			{error ? <div>Error: {error.message}</div> : null}
 			{/* End Page Header */}
 			<Outlet />
 			<div className="space-y-2">
