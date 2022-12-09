@@ -1,5 +1,5 @@
 import type { LoaderArgs } from '@remix-run/node'
-import type { PackageWithNestedData } from '~/models/types/custom'
+import type { ActivePackageWithLabs } from '~/models/types/custom'
 import { authenticator } from '~/auth.server'
 import { SessionObject } from '~/services/session.server'
 import { json } from '@remix-run/node'
@@ -13,11 +13,11 @@ import PackageTableRowActions from '~/components/tables/PackageTableRowActions'
 
 const tableTitle = 'Packages'
 const tableDescription = 'List of all product inventory'
-const columnHelper = createColumnHelper<PackageWithNestedData>()
+const columnHelper = createColumnHelper<ActivePackageWithLabs>()
 
 type LoaderData = {
 	session: SessionObject
-	packages: PackageWithNestedData[]
+	packages: ActivePackageWithLabs[]
 	error: { message: string } | null
 }
 
@@ -27,7 +27,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 	})
 
 	const packagesResponse = await fetch(
-		`${process.env.API_BASE_URL}/packages`,
+		`${process.env.API_BASE_URL}/packages/active/all`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -35,7 +35,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 			referrerPolicy: 'strict-origin-when-cross-origin',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${session.access_token}`,
+				Authorization: `Bearer ${session.access_token}`,
 			},
 		},
 	)
@@ -53,7 +53,7 @@ export default function InventoryIndex(): JSX.Element {
 	}
 
 	// Column structure for table
-	const columnData: ColumnDef<PackageWithNestedData>[] = [
+	const columnData: ColumnDef<ActivePackageWithLabs>[] = [
 		columnHelper.display({
 			id: 'actions',
 			cell: (props) => (
@@ -83,32 +83,29 @@ export default function InventoryIndex(): JSX.Element {
 					enableGlobalFilter: false,
 					enableSorting: false,
 				}),
-				columnHelper.accessor(
-					(row: any) => (row.tag ? row.tag.tagNumber : 'No Tag'),
-					{
-						id: 'tagNumber',
-						header: () => <span>Tag Number</span>,
-						cell: (info) => {
-							const value = info.getValue() as string
-							if (value === '') {
-								return <span>-</span>
-							}
-							return (
-								<>
-									{/*<span>{value.slice(0, 19)}</span>*/}
-									<span className="fonts font-semibold">
-										{value.slice(19, 24)}
-									</span>
-								</>
-							)
-						},
-						enableGrouping: false,
-						enableColumnFilter: true,
-						enableGlobalFilter: false,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor((row: any) => `${row.item.strain?.name}`, {
+				columnHelper.accessor('tag_number', {
+					id: 'tagNumber',
+					header: () => <span>Tag Number</span>,
+					// cell: (info) => {
+					// 	const value = info.getValue() as string
+					// 	if (value === '') {
+					// 		return <span>-</span>
+					// 	}
+					// 	return (
+					// 		<>
+					// 			{/*<span>{value.slice(0, 19)}</span>*/}
+					// 			<span className="fonts font-semibold">
+					// 				{value.slice(19, 24)}
+					// 			</span>
+					// 		</>
+					// 	)
+					// },
+					enableGrouping: false,
+					enableColumnFilter: true,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('strain_name', {
 					id: 'strain',
 					cell: (info) => {
 						const value = info.getValue() as string
@@ -120,40 +117,31 @@ export default function InventoryIndex(): JSX.Element {
 					enableGlobalFilter: true,
 					enableSorting: true,
 				}),
-				columnHelper.accessor(
-					(row: any) => `${row.labTests[0]?.labTest.batchCode}`,
-					{
-						id: 'testBatch',
-						header: () => <span>Batch</span>,
-						enableGrouping: true,
-						enableColumnFilter: true,
-						enableGlobalFilter: true,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.item.itemType?.productForm}`,
-					{
-						id: 'productForm',
-						header: () => <span>Form</span>,
-						enableGrouping: true,
-						enableColumnFilter: true,
-						enableGlobalFilter: true,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.item.itemType?.productModifier}`,
-					{
-						id: 'productModifier',
-						header: () => <span>Modifier</span>,
-						enableGrouping: true,
-						enableColumnFilter: true,
-						enableGlobalFilter: true,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor((row: any) => `${row.item.strain?.type}`, {
+				columnHelper.accessor('batch_code', {
+					id: 'testBatch',
+					header: () => <span>Batch</span>,
+					enableGrouping: true,
+					enableColumnFilter: true,
+					enableGlobalFilter: true,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('product_form', {
+					id: 'productForm',
+					header: () => <span>Form</span>,
+					enableGrouping: true,
+					enableColumnFilter: true,
+					enableGlobalFilter: true,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('product_modifier', {
+					id: 'productModifier',
+					header: () => <span>Modifier</span>,
+					enableGrouping: true,
+					enableColumnFilter: true,
+					enableGlobalFilter: true,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('strain_type', {
 					id: 'type',
 					header: () => <span>Type</span>,
 					enableGrouping: true,
@@ -170,50 +158,38 @@ export default function InventoryIndex(): JSX.Element {
 			enableGlobalFilter: false,
 			enableSorting: false,
 			columns: [
-				columnHelper.accessor(
-					(row: any) => `${row.labTests[0]?.labTest.thcTotalPercent}`,
-					{
-						id: 'thc',
-						header: () => <span>THC</span>,
-						enableGrouping: false,
-						enableColumnFilter: false,
-						enableGlobalFilter: false,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.labTests[0]?.labTest.cbdPercent}`,
-					{
-						id: 'cbd',
-						header: () => <span>CBD</span>,
-						enableGrouping: false,
-						enableColumnFilter: false,
-						enableGlobalFilter: false,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.labTests[0]?.labTest.terpenePercent}`,
-					{
-						id: 'terpenes',
-						header: () => <span>Terps</span>,
-						enableGrouping: false,
-						enableColumnFilter: false,
-						enableGlobalFilter: false,
-						enableSorting: true,
-					},
-				),
-				columnHelper.accessor(
-					(row: any) => `${row.labTests[0]?.labTest.totalCannabinoidsPercent}`,
-					{
-						id: 'totalCannabinoids',
-						header: () => <span>Total Cannabinoids</span>,
-						enableGrouping: false,
-						enableColumnFilter: false,
-						enableGlobalFilter: false,
-						enableSorting: true,
-					},
-				),
+				columnHelper.accessor('thc_total_percent', {
+					id: 'thc',
+					header: () => <span>THC</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('cbd_percent', {
+					id: 'cbd',
+					header: () => <span>CBD</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('terpene_total_percent', {
+					id: 'terpenes',
+					header: () => <span>Terps</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('total_cannabinoid_percent', {
+					id: 'totalCannabinoids',
+					header: () => <span>Total Cannabinoids</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
 			],
 		}),
 		columnHelper.group({
@@ -231,7 +207,7 @@ export default function InventoryIndex(): JSX.Element {
 					enableGlobalFilter: false,
 					enableSorting: true,
 				}),
-				columnHelper.accessor((row: any) => row.uom?.name, {
+				columnHelper.accessor('abbreviation', {
 					id: 'uom',
 					header: () => <span>UoM</span>,
 					enableGrouping: false,

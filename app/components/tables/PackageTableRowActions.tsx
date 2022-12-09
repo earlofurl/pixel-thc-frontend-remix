@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Menu, Transition } from '@headlessui/react'
-import type { PackageWithNestedData } from '~/models/types/custom'
+import type { ActivePackageWithLabs } from '~/models/types/custom'
 import { Link, useNavigate } from '@remix-run/react'
 import { Row } from '@tanstack/react-table'
 import {
@@ -22,7 +22,7 @@ function classNames(
 export default function PackageTableRowActions({
 	row,
 }: {
-	row: Row<PackageWithNestedData>
+	row: Row<ActivePackageWithLabs>
 }): JSX.Element {
 	const navigate = useNavigate()
 

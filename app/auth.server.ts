@@ -4,9 +4,9 @@ import invariant from 'tiny-invariant'
 import type { SessionObject } from '~/services/session.server'
 import { sessionStorage } from '~/services/session.server'
 
-export const authenticator = new Authenticator<SessionObject>(
-	sessionStorage,
-)
+// TODO: I think maybe I should be passing the session cookie back and forth and parsing on backend.
+
+export const authenticator = new Authenticator<SessionObject>(sessionStorage)
 
 authenticator.use(
 	new FormStrategy(async ({ form, context }) => {
@@ -29,13 +29,25 @@ authenticator.use(
 		const bodyObject = JSON.stringify({ email, password })
 
 		// And finally, you can find, or create, the user
-		const userResponse = await fetch(`${process.env.API_BASE_URL}/users/login`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
+		const userResponse = await fetch(
+			`${process.env.API_BASE_URL}/users/login`,
+			// 'http://localhost:8088/users/login',
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: bodyObject,
 			},
-			body: bodyObject,
-		})
+		)
+
+		// Get the Set-Cookie header from the response
+		const sessionCookie = await sessionStorage.getSession(
+			userResponse.headers.get('Set-Cookie'),
+		)
+
+		// Set the sessionCookie in sessionStorage
+		await sessionStorage.commitSession(sessionCookie)
 
 		return userResponse.json()
 	}),
