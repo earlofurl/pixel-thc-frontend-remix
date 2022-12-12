@@ -155,6 +155,31 @@ export default function InventoryIndex(): JSX.Element {
 			],
 		}),
 		columnHelper.group({
+			id: 'stock',
+			enableGrouping: false,
+			enableColumnFilter: false,
+			enableGlobalFilter: false,
+			enableSorting: false,
+			columns: [
+				columnHelper.accessor('quantity', {
+					id: 'quantity',
+					header: () => <span>Quantity</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('uom_abbreviation', {
+					id: 'uom',
+					header: () => <span>UoM</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+			],
+		}),
+		columnHelper.group({
 			id: 'stats',
 			enableGrouping: false,
 			enableColumnFilter: false,
@@ -188,31 +213,6 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('total_cannabinoid_percent', {
 					id: 'totalCannabinoids',
 					header: () => <span>Total Cannabinoids</span>,
-					enableGrouping: false,
-					enableColumnFilter: false,
-					enableGlobalFilter: false,
-					enableSorting: true,
-				}),
-			],
-		}),
-		columnHelper.group({
-			id: 'stock',
-			enableGrouping: false,
-			enableColumnFilter: false,
-			enableGlobalFilter: false,
-			enableSorting: false,
-			columns: [
-				columnHelper.accessor('quantity', {
-					id: 'quantity',
-					header: () => <span>Quantity</span>,
-					enableGrouping: false,
-					enableColumnFilter: false,
-					enableGlobalFilter: false,
-					enableSorting: true,
-				}),
-				columnHelper.accessor('uom_abbreviation', {
-					id: 'uom',
-					header: () => <span>UoM</span>,
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
