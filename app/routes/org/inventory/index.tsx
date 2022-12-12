@@ -123,6 +123,11 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('batch_code', {
 					id: 'testBatch',
 					header: () => <span>Batch</span>,
+					cell: (info) => {
+						const value = info.getValue() as string
+
+						return <span className="fonts font-semibold text-lg">{value}</span>
+					},
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
