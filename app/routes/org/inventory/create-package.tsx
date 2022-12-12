@@ -117,9 +117,11 @@ export const action = async ({ request }: ActionArgs) => {
 	})
 
 	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
+
 	const error = session.get(
 		authenticator.sessionErrorKey,
 	) as ActionData['error']
+
 	session.set(authenticator.sessionKey, authResponse)
 
 	const body = await request.formData()
@@ -127,19 +129,28 @@ export const action = async ({ request }: ActionArgs) => {
 	const sourcePackageId = JSON.parse(
 		body.get('parent-package-object') as string,
 	).id
+
 	const inheritedLabTestIds = JSON.parse(
 		body.get('parent-package-object') as string,
 	).labTestIds
+
 	const tagId = JSON.parse(body.get('tag-object') as string).id
+
 	const itemId = JSON.parse(body.get('item-object') as string).id
+
 	const quantity = body.get('quantity') as string
+
 	const uomId = JSON.parse(body.get('uom-object') as string).id
+
 	// let orderId = null
 	// if (JSON.parse(body.get('order-object') as string).id) {
 	// 	orderId = JSON.parse(body.get('order-object') as string).id
 	// }
+
 	const orderId = JSON.parse(body.get('order-object') as string)?.id ?? null
+
 	const pricePerUnit = body.get('price-per-unit') as string
+
 	const newParentQuantity = body.get('new-parent-quantity') as string
 
 	// const cookieHeader = request.headers.get('Cookie')

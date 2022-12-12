@@ -210,7 +210,7 @@ export default function InventoryIndex(): JSX.Element {
 					enableGlobalFilter: false,
 					enableSorting: true,
 				}),
-				columnHelper.accessor('abbreviation', {
+				columnHelper.accessor('uom_abbreviation', {
 					id: 'uom',
 					header: () => <span>UoM</span>,
 					enableGrouping: false,
