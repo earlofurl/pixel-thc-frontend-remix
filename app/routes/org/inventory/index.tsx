@@ -89,20 +89,20 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('tag_number', {
 					id: 'tagNumber',
 					header: () => <span>Tag Number</span>,
-					// cell: (info) => {
-					// 	const value = info.getValue() as string
-					// 	if (value === '') {
-					// 		return <span>-</span>
-					// 	}
-					// 	return (
-					// 		<>
-					// 			{/*<span>{value.slice(0, 19)}</span>*/}
-					// 			<span className="fonts font-semibold">
-					// 				{value.slice(19, 24)}
-					// 			</span>
-					// 		</>
-					// 	)
-					// },
+					cell: (info) => {
+						const value = info.getValue() as string
+						if (value === '') {
+							return <span>-</span>
+						}
+						return (
+							<>
+								{/*<span>{value.slice(0, 19)}</span>*/}
+								<span className="fonts font-semibold">
+									{value.slice(19, 24)}
+								</span>
+							</>
+						)
+					},
 					enableGrouping: false,
 					enableColumnFilter: true,
 					enableGlobalFilter: false,
@@ -112,7 +112,7 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'strain',
 					cell: (info) => {
 						const value = info.getValue() as string
-						return <span className="fonts font-semibold">{value}</span>
+						return <span className="fonts font-semibold text-lg">{value}</span>
 					},
 					header: () => <span>Strain</span>,
 					enableGrouping: true,
@@ -164,6 +164,11 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('quantity', {
 					id: 'quantity',
 					header: () => <span>Quantity</span>,
+					cell: (info) => {
+						const value = info.getValue() as number
+
+						return <span className="fonts font-semibold text-lg">{value}</span>
+					},
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -172,6 +177,11 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('uom_abbreviation', {
 					id: 'uom',
 					header: () => <span>UoM</span>,
+					cell: (info) => {
+						const value = info.getValue() as string
+
+						return <span className="fonts font-semibold text-lg">{value}</span>
+					},
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
