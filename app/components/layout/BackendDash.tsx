@@ -12,7 +12,7 @@ import {
 	MapPinIcon,
 } from '@heroicons/react/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import { Link, NavLink, Outlet } from '@remix-run/react'
+import { Form, Link, NavLink, Outlet } from '@remix-run/react'
 
 const sidebarNavigation = [
 	{ name: 'Dashboard', to: '/org/dashboard', icon: HomeIcon },
@@ -45,7 +45,6 @@ const sidebarNavigation = [
 
 const userNavigation = [
 	{ name: 'Your Profile', href: '#' },
-	{ name: 'Sign out', href: '#' },
 ]
 
 function classNames(...classes) {
@@ -278,18 +277,29 @@ export default function BackendDash(): JSX.Element {
 										leaveTo="transform opacity-0 scale-95">
 										<Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
 											{userNavigation.map((item) => (
+												<>
 												<Menu.Item key={item.name}>
 													{({ active }) => (
+														<div className="px-1 py-1">
 														<Link
 															to={item.href}
 															className={classNames(
 																active ? 'bg-gray-100' : '',
-																'block px-4 py-2 text-sm text-gray-700',
+																'inline-flex items-center rounded border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
 															)}>
 															{item.name}
 														</Link>
+														</div>
 													)}
 												</Menu.Item>
+													<div className="px-1 py-1">
+												<Menu.Item>
+													<Form method="post" action="/logout">
+													<button type="submit" name="action" action="/logout" className="inline-flex items-center rounded border border-transparent bg-gray-100 mx-auto px-3.5 py-2.5 text-xs font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Sign Out</button>
+													</Form>
+												</Menu.Item>
+													</div>
+												</>
 											))}
 										</Menu.Items>
 									</Transition>
