@@ -249,11 +249,14 @@ export default function BasicGroupingTable({
 									))}
 								</thead>
 								{/* Table body */}
-								<tbody className="divide-y divide-gray-50 bg-white">
-									{table.getRowModel().rows.map((row) => (
+								<tbody className="divide-y divide-gray-200 bg-white">
+									{table.getRowModel().rows.map((row, rowIdx) => (
 										<tr
-											// className={row.id % 2 === 0 ? undefined : "bg-gray-50"}
-											className="whitespace-nowrap px-2 py-3.5 text-right text-sm font-medium text-gray-900"
+											{...{
+												className:
+													rowIdx % 2 === 0 ? "whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900" : "whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900 bg-gray-50",
+											}}
+											// className="whitespace-nowrap px-2 py-3.5 text-right text-sm font-medium text-gray-900"
 											key={row.id}>
 											{row.getVisibleCells().map((cell) => (
 												<td
