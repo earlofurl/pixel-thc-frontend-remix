@@ -1,14 +1,13 @@
 import { Combobox, Listbox, Transition } from '@headlessui/react'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline'
-import type { Item, Order, PackageTag, Uom } from '~/models/types/standard'
-import { ActivePackageWithLabs } from '~/models/types/custom'
-import type { ActionArgs } from '@remix-run/node'
-import { json, LoaderArgs, redirect } from '@remix-run/node'
+import type { ActionArgs, LoaderArgs } from '@remix-run/node'
+import { json, redirect } from '@remix-run/node'
 import { useCatch, useLoaderData } from '@remix-run/react'
 import React, { Fragment, useState } from 'react'
 import { authenticator } from '~/auth.server'
+import type { ActivePackageWithLabs } from '~/models/types/custom'
+import type { Item, Order, PackageTag, Uom } from '~/models/types/standard'
 import { sessionStorage } from '~/services/session.server'
-
 import { packageUnitConverter } from '~/utils/conversions'
 
 type LoaderData = {
@@ -103,11 +102,30 @@ export const loader = async ({ request }: LoaderArgs) => {
 		},
 	})
 
-	const packages = await packagesResponse.json()
-	const packageTags = await packageTagsResponse.json()
-	const items = await itemsResponse.json()
-	const uoms = await uomsResponse.json()
-	const orders = await ordersResponse.json()
+	const { packages, packageTags, items, uoms, orders } = await Promise.all([
+		packagesResponse,
+		packageTagsResponse,
+		itemsResponse,
+		uomsResponse,
+		ordersResponse,
+	]).then(
+		async ([
+			packagesResponse,
+			packageTagsResponse,
+			itemsResponse,
+			uomsResponse,
+			ordersResponse,
+		]) => {
+			const packages = await packagesResponse.json()
+			const packageTags = await packageTagsResponse.json()
+			const items = await itemsResponse.json()
+			const uoms = await uomsResponse.json()
+			const orders = await ordersResponse.json()
+
+			return { packages, packageTags, items, uoms, orders }
+		},
+	)
+
 	return json<LoaderData>({ packages, packageTags, items, uoms, orders, error })
 }
 
@@ -310,10 +328,10 @@ export default function CreatePackageForm(): JSX.Element {
 							<h3 className="text-lg font-medium leading-6 text-gray-900">
 								Source Package
 							</h3>
-							{/*<p className="mt-1 text-sm text-gray-500">*/}
+							{/* <p className="mt-1 text-sm text-gray-500">*/}
 							{/*	Start by selecting the existing package the new package*/}
 							{/*	originates from.*/}
-							{/*</p>*/}
+							{/* </p>*/}
 						</div>
 
 						{/* Source Package Select */}
@@ -470,7 +488,7 @@ export default function CreatePackageForm(): JSX.Element {
 											</span>
 										</div>
 
-										{/*<div*/}
+										{/* <div*/}
 										{/*	className={classNames(*/}
 										{/*		item.changeType === 'increase'*/}
 										{/*			? 'bg-green-100 text-green-800'*/}
@@ -497,7 +515,7 @@ export default function CreatePackageForm(): JSX.Element {
 										{/*		by{' '}*/}
 										{/*	</span>*/}
 										{/*	{item.change}*/}
-										{/*</div>*/}
+										{/* </div>*/}
 									</dd>
 								</div>
 							</dl>
@@ -511,9 +529,9 @@ export default function CreatePackageForm(): JSX.Element {
 						<h3 className="text-lg font-medium leading-6 text-gray-900">
 							New Package
 						</h3>
-						{/*<p className="mt-1 text-sm text-gray-500">*/}
+						{/* <p className="mt-1 text-sm text-gray-500">*/}
 						{/*	Enter the information for the package you are creating.*/}
-						{/*</p>*/}
+						{/* </p>*/}
 					</div>
 					<div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
 						<div className="sm:col-span-4">
@@ -688,7 +706,7 @@ export default function CreatePackageForm(): JSX.Element {
 						</label>
 						<div className="max-w-60 relative mt-1 rounded-md shadow-sm">
 							<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-								{/*<span className="text-gray-500 sm:text-sm">$</span>*/}
+								{/* <span className="text-gray-500 sm:text-sm">$</span>*/}
 							</div>
 							<input
 								type="number"
@@ -697,16 +715,16 @@ export default function CreatePackageForm(): JSX.Element {
 								name="quantity"
 								id="quantity"
 								onChange={(event) => {
-									setQuantity(parseFloat(event.target.value))
+									setQuantity(Number.parseFloat(event.target.value))
 									calculateNewParentQuantity(event.target.value)
 								}}
 								className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 								placeholder="0.0000"
 							/>
 						</div>
-						{/*End Quantity Input*/}
+						{/* End Quantity Input*/}
 
-						{/*<div className="flex items-center">*/}
+						{/* <div className="flex items-center">*/}
 						{/*	<label htmlFor="quantity" className="sr-only">*/}
 						{/*		Quantity*/}
 						{/*	</label>*/}
@@ -727,7 +745,7 @@ export default function CreatePackageForm(): JSX.Element {
 						{/*		name="uom-object"*/}
 						{/*		value={JSON.stringify(selectedUom)}*/}
 						{/*	/>*/}
-						{/*</div>*/}
+						{/* </div>*/}
 					</div>
 					{/* End Combined Unit of Measure Select*/}
 					{/* New Package Tag Select */}
@@ -903,7 +921,7 @@ export default function CreatePackageForm(): JSX.Element {
 				</label>
 				<div className="max-w-60 relative mt-1 rounded-md shadow-sm">
 					<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-						{/*<span className="text-gray-500 sm:text-sm">$</span>*/}
+						{/* <span className="text-gray-500 sm:text-sm">$</span>*/}
 					</div>
 					<input
 						type="number"
@@ -912,14 +930,14 @@ export default function CreatePackageForm(): JSX.Element {
 						name="price"
 						id="price"
 						onChange={(event) => {
-							setPricePerUnit(parseFloat(event.target.value))
+							setPricePerUnit(Number.parseFloat(event.target.value))
 						}}
 						className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 						placeholder="0.0000"
 					/>
 				</div>
 				<input type="hidden" name="price-per-unit" value={pricePerUnit} />
-				{/*End Price per Unit Input*/}
+				{/* End Price per Unit Input*/}
 
 				<div className="pt-5">
 					<div className="flex justify-end">
