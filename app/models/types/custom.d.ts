@@ -81,7 +81,7 @@ export type ActivePackageWithLabs = {
 	product_modifier: string
 	strain_name: string
 	strain_type: string
-	id_3: number
+	lab_test_id: number
 	created_at_3: string
 	updated_at_3: string
 	test_name: string

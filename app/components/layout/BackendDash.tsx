@@ -43,9 +43,7 @@ const sidebarNavigation = [
 	},
 ]
 
-const userNavigation = [
-	{ name: 'Your Profile', href: '#' },
-]
+const userNavigation = [{ name: 'Your Profile', href: '#' }]
 
 function classNames(...classes) {
 	return classes.filter(Boolean).join(' ')
@@ -260,10 +258,18 @@ export default function BackendDash(): JSX.Element {
 									<div>
 										<Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
 											<span className="sr-only">Open user menu</span>
-											<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-													 stroke="currentColor" className="w-6 h-6">
-												<path stroke-linecap="round" stroke-linejoin="round"
-															d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												strokeWidth="1.5"
+												stroke="currentColor"
+												className="h-6 w-6">
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+												/>
 											</svg>
 										</Menu.Button>
 									</div>
@@ -278,26 +284,32 @@ export default function BackendDash(): JSX.Element {
 										<Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
 											{userNavigation.map((item) => (
 												<>
-												<Menu.Item key={item.name}>
-													{({ active }) => (
-														<div className="px-1 py-1">
-														<Link
-															to={item.href}
-															className={classNames(
-																active ? 'bg-gray-100' : '',
-																'inline-flex items-center rounded border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-															)}>
-															{item.name}
-														</Link>
-														</div>
-													)}
-												</Menu.Item>
+													<Menu.Item key={item.name}>
+														{({ active }) => (
+															<div className="px-1 py-1">
+																<Link
+																	to={item.href}
+																	className={classNames(
+																		active ? 'bg-gray-100' : '',
+																		'inline-flex items-center rounded border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+																	)}>
+																	{item.name}
+																</Link>
+															</div>
+														)}
+													</Menu.Item>
 													<div className="px-1 py-1">
-												<Menu.Item>
-													<Form method="post" action="/logout">
-													<button type="submit" name="action" action="/logout" className="inline-flex items-center rounded border border-transparent bg-gray-100 mx-auto px-3.5 py-2.5 text-xs font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Sign Out</button>
-													</Form>
-												</Menu.Item>
+														<Menu.Item>
+															<Form method="post" action="/logout">
+																<button
+																	type="submit"
+																	name="action"
+																	action="/logout"
+																	className="mx-auto inline-flex items-center rounded border border-transparent bg-gray-100 px-3.5 py-2.5 text-xs font-medium text-red-700 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+																	Sign Out
+																</button>
+															</Form>
+														</Menu.Item>
 													</div>
 												</>
 											))}

@@ -9,6 +9,7 @@ import type { ActivePackageWithLabs } from '~/models/types/custom'
 import type { Item, Order, PackageTag, Uom } from '~/models/types/standard'
 import { sessionStorage } from '~/services/session.server'
 import { packageUnitConverter } from '~/utils/conversions'
+import dayjs from 'dayjs'
 
 type LoaderData = {
 	error: { message: string } | null
@@ -135,11 +136,7 @@ export const action = async ({ request }: ActionArgs) => {
 	})
 
 	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
-
-	const error = session.get(
-		authenticator.sessionErrorKey,
-	) as ActionData['error']
-
+	const error = session.get(authenticator.sessionErrorKey)
 	session.set(authenticator.sessionKey, authResponse)
 
 	const body = await request.formData()
@@ -148,9 +145,17 @@ export const action = async ({ request }: ActionArgs) => {
 		body.get('parent-package-object') as string,
 	).id
 
-	const inheritedLabTestIds = JSON.parse(
+	const packageType = JSON.parse(
 		body.get('parent-package-object') as string,
-	).labTestIds
+	).package_type
+
+	const harvestDate = JSON.parse(
+		body.get('parent-package-object') as string,
+	).harvest_date_time
+
+	// const inheritedLabTestIds = JSON.parse(
+	// 	body.get('parent-package-object') as string,
+	// ).labTestIds
 
 	const tagId = JSON.parse(body.get('tag-object') as string).id
 
@@ -169,22 +174,68 @@ export const action = async ({ request }: ActionArgs) => {
 
 	const pricePerUnit = body.get('price-per-unit') as string
 
-	const newParentQuantity = body.get('new-parent-quantity') as string
+	const labTestId = JSON.parse(
+		body.get('parent-package-object') as string,
+	).lab_test_id
+
+	// const newParentQuantity = body.get('new-parent-quantity') as string
 
 	// const cookieHeader = request.headers.get('Cookie')
 	// const session = await sessionStorage.getSession(cookieHeader)
 
-	const bodyObject = new URLSearchParams({
-		sourcePackageId,
-		inheritedLabTestIds,
-		tagId,
-		itemId,
-		quantity,
-		uomId,
-		orderId,
-		pricePerUnit,
-		newParentQuantity,
-	}).toString()
+	// TODO: I think I should remove most of the testing info from the package model.
+	const bodyObject = JSON.stringify({
+		source_package_id: sourcePackageId,
+		tag_id: tagId,
+		package_type: packageType,
+		is_active: true,
+		quantity: quantity,
+		notes: '',
+		// packaged_date_time: dayjs().format('YYYY-MM-DDTHH:mm:ss[Z]Z'),
+		packaged_date_time: '2022-12-18T03:51:39.178012Z',
+		harvest_date_time: harvestDate,
+		lab_testing_state: '',
+		lab_testing_state_date_time: '2001-12-16T20:55:39.178012Z',
+		is_trade_sample: false,
+		is_testing_sample: false,
+		product_requires_remediation: false,
+		contains_remediated_product: false,
+		remediation_date_time: '2001-12-16T20:55:39.178012Z',
+		received_date_time: '2001-12-16T20:55:39.178012Z',
+		received_from_manifest_number: 'TestManifestNumber',
+		received_from_facility_license_number: 'TestFacilityLicenseNumber',
+		received_from_facility_name: 'TestFacilityName',
+		is_on_hold: false,
+		archived_date: '2001-12-16T20:55:39.178013Z',
+		finished_date: '2001-12-16T20:55:39.178013Z',
+		item_id: itemId,
+		provisional_label: 'TestProvisionalLabel',
+		is_provisional: false,
+		is_sold: false,
+		ppu_default: pricePerUnit,
+		ppu_on_order: pricePerUnit,
+		total_package_price_on_order: '0.00',
+		ppu_sold_price: '0.00',
+		total_sold_price: '0.00',
+		packaging_supplies_consumed: false,
+		is_line_item: false,
+		// order_id: orderId,
+		uom_id: uomId,
+		facility_location_id: null,
+		lab_test_id: labTestId,
+	})
+
+	// const bodyObject = JSON.stringify({
+	// 	sourcePackageId,
+	// 	inheritedLabTestIds,
+	// 	tagId,
+	// 	itemId,
+	// 	quantity,
+	// 	uomId,
+	// 	orderId,
+	// 	pricePerUnit,
+	// 	newParentQuantity,
+	// }).toString()
 
 	const response = await fetch(`${process.env.API_BASE_URL}/packages`, {
 		method: 'POST',
@@ -192,11 +243,14 @@ export const action = async ({ request }: ActionArgs) => {
 		credentials: 'include',
 		referrerPolicy: 'strict-origin-when-cross-origin',
 		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			Cookie: await session.data.user,
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${authResponse.access_token}`,
 		},
 		body: bodyObject,
 	})
+
+	console.log(await response.json())
 
 	if (response.status === 201) {
 		return redirect('/org/inventory')
