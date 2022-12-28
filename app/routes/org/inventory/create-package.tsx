@@ -1,45 +1,53 @@
-import { Combobox, Listbox, Transition } from '@headlessui/react'
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline'
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
-import { useCatch, useLoaderData } from '@remix-run/react'
-import React, { Fragment, useState } from 'react'
-import { authenticator } from '~/auth.server'
-import type { ActivePackageWithLabs } from '~/models/types/custom'
-import type { Item, Order, PackageTag, Uom } from '~/models/types/standard'
-import { sessionStorage } from '~/services/session.server'
-import { packageUnitConverter } from '~/utils/conversions'
-import dayjs from 'dayjs'
+import { Combobox, Listbox, Transition } from '@headlessui/react';
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/outline';
+import type { ActionArgs, LoaderArgs } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
+import { useCatch, useLoaderData } from '@remix-run/react';
+import React, { Fragment, useState } from 'react';
+import { authenticator } from '~/auth.server';
+import type { ActivePackageWithLabs } from '~/models/types/custom';
+import type {
+	FacilityLocation,
+	Item,
+	Order,
+	PackageTag,
+	Uom,
+} from '~/models/types/standard';
+import { sessionStorage } from '~/services/session.server';
+import { packageUnitConverter } from '~/utils/conversions';
 
 type LoaderData = {
-	error: { message: string } | null
-	packages: ActivePackageWithLabs[]
-	items: Item[]
-	uoms: Uom[]
-	packageTags: PackageTag[]
-	orders: Order[]
-}
+	error: { message: string } | null;
+	packages: ActivePackageWithLabs[];
+	items: Item[];
+	uoms: Uom[];
+	packageTags: PackageTag[];
+	orders: Order[];
+	facilityLocations: FacilityLocation[];
+};
 
 type ActionData = {
 	errors?: {
-		quantity?: string
-		newParentQuantity?: string
-		orderId?: string
-	}
-}
+		quantity?: string;
+		newParentQuantity?: string;
+		orderId?: string;
+	};
+};
 
 function classNames(...classes: (string | boolean)[]) {
-	return classes.filter(Boolean).join(' ')
+	return classes.filter(Boolean).join(' ');
 }
 
 export const loader = async ({ request }: LoaderArgs) => {
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
-	})
+	});
 
-	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
-	const error = session.get(authenticator.sessionErrorKey)
-	session.set(authenticator.sessionKey, authResponse)
+	const session = await sessionStorage.getSession(
+		request.headers.get('Cookie'),
+	);
+	const error = session.get(authenticator.sessionErrorKey);
+	session.set(authenticator.sessionKey, authResponse);
 
 	// TODO: Refactor this to reduce repetition
 	const packagesResponse = await fetch(
@@ -54,7 +62,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
-	)
+	);
 
 	const packageTagsResponse = await fetch(
 		`${process.env.API_BASE_URL}/package-tags`,
@@ -68,7 +76,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
-	)
+	);
 
 	const itemsResponse = await fetch(`${process.env.API_BASE_URL}/items`, {
 		method: 'GET',
@@ -79,7 +87,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	})
+	});
 
 	const uomsResponse = await fetch(`${process.env.API_BASE_URL}/uoms`, {
 		method: 'GET',
@@ -90,7 +98,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	})
+	});
 
 	const ordersResponse = await fetch(`${process.env.API_BASE_URL}/orders`, {
 		method: 'GET',
@@ -101,82 +109,121 @@ export const loader = async ({ request }: LoaderArgs) => {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	})
+	});
 
-	const { packages, packageTags, items, uoms, orders } = await Promise.all([
-		packagesResponse,
-		packageTagsResponse,
-		itemsResponse,
-		uomsResponse,
-		ordersResponse,
-	]).then(
-		async ([
+	const facilityLocationsResponse = await fetch(
+		`${process.env.API_BASE_URL}/facility-locations`,
+		{
+			method: 'GET',
+			mode: 'cors',
+			credentials: 'include',
+			referrerPolicy: 'strict-origin-when-cross-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${authResponse.access_token}`,
+			},
+		},
+	);
+
+	const { packages, packageTags, items, uoms, orders, facilityLocations } =
+		await Promise.all([
 			packagesResponse,
 			packageTagsResponse,
 			itemsResponse,
 			uomsResponse,
 			ordersResponse,
-		]) => {
-			const packages = await packagesResponse.json()
-			const packageTags = await packageTagsResponse.json()
-			const items = await itemsResponse.json()
-			const uoms = await uomsResponse.json()
-			const orders = await ordersResponse.json()
+			facilityLocationsResponse,
+		]).then(
+			async ([
+				packagesResponse,
+				packageTagsResponse,
+				itemsResponse,
+				uomsResponse,
+				ordersResponse,
+				facilityLocationsResponse,
+			]) => {
+				const packages = await packagesResponse.json();
+				const packageTags = await packageTagsResponse.json();
+				const items = await itemsResponse.json();
+				const uoms = await uomsResponse.json();
+				const orders = await ordersResponse.json();
+				const facilityLocations = await facilityLocationsResponse.json();
 
-			return { packages, packageTags, items, uoms, orders }
-		},
-	)
+				return {
+					packages,
+					packageTags,
+					items,
+					uoms,
+					orders,
+					facilityLocations,
+				};
+			},
+		);
 
-	return json<LoaderData>({ packages, packageTags, items, uoms, orders, error })
-}
+	return json<LoaderData>({
+		packages,
+		packageTags,
+		items,
+		uoms,
+		orders,
+		facilityLocations,
+		error,
+	});
+};
 
 export const action = async ({ request }: ActionArgs) => {
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
-	})
+	});
 
-	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
-	const error = session.get(authenticator.sessionErrorKey)
-	session.set(authenticator.sessionKey, authResponse)
+	const session = await sessionStorage.getSession(
+		request.headers.get('Cookie'),
+	);
+	const error = session.get(authenticator.sessionErrorKey);
+	session.set(authenticator.sessionKey, authResponse);
 
-	const body = await request.formData()
+	const body = await request.formData();
 
 	const sourcePackageId = JSON.parse(
 		body.get('parent-package-object') as string,
-	).id
+	).id;
 
 	const packageType = JSON.parse(
 		body.get('parent-package-object') as string,
-	).package_type
+	).package_type;
 
 	const harvestDate = JSON.parse(
 		body.get('parent-package-object') as string,
-	).harvest_date_time
+	).harvest_date_time;
 
 	// const inheritedLabTestIds = JSON.parse(
 	// 	body.get('parent-package-object') as string,
 	// ).labTestIds
 
-	const tagId = JSON.parse(body.get('tag-object') as string).id
+	const tagId = JSON.parse(body.get('tag-object') as string).id;
 
-	const itemId = JSON.parse(body.get('item-object') as string).id
+	const itemId = JSON.parse(body.get('item-object') as string).id;
 
-	const quantity = body.get('quantity') as string
+	const quantity = body.get('quantity') as string;
 
-	const uomId = JSON.parse(body.get('uom-object') as string).id
+	const uomId = JSON.parse(body.get('uom-object') as string).id;
 
 	// let orderId = null
 	// if (JSON.parse(body.get('order-object') as string).id) {
 	// 	orderId = JSON.parse(body.get('order-object') as string).id
 	// }
 
-	const orderId = JSON.parse(body.get('order-object') as string)?.id ?? null
+	const orderId = JSON.parse(body.get('order-object') as string)?.id ?? null;
 
-	const pricePerUnit = body.get('price-per-unit') as string
+	const pricePerUnit = body.get('price-per-unit') as string;
 
 	const labTestId = JSON.parse(
 		body.get('parent-package-object') as string,
-	).lab_test_id
+	).lab_test_id;
+
+	const facilityLocationId = JSON.parse(
+		body.get('facility-location-object') as string,
+	).id;
 
 	// const newParentQuantity = body.get('new-parent-quantity') as string
 
@@ -221,21 +268,9 @@ export const action = async ({ request }: ActionArgs) => {
 		is_line_item: false,
 		// order_id: orderId,
 		uom_id: uomId,
-		facility_location_id: null,
+		facility_location_id: facilityLocationId,
 		lab_test_id: labTestId,
-	})
-
-	// const bodyObject = JSON.stringify({
-	// 	sourcePackageId,
-	// 	inheritedLabTestIds,
-	// 	tagId,
-	// 	itemId,
-	// 	quantity,
-	// 	uomId,
-	// 	orderId,
-	// 	pricePerUnit,
-	// 	newParentQuantity,
-	// }).toString()
+	});
 
 	const response = await fetch(`${process.env.API_BASE_URL}/packages`, {
 		method: 'POST',
@@ -248,44 +283,57 @@ export const action = async ({ request }: ActionArgs) => {
 			Authorization: `Bearer ${authResponse.access_token}`,
 		},
 		body: bodyObject,
-	})
+	});
 
-	console.log(await response.json())
+	console.log(await response.json());
 
-	if (response.status === 201) {
-		return redirect('/org/inventory')
+	const successCreatedResponseCode = 201;
+	if (response.status === successCreatedResponseCode) {
+		return redirect('/org/inventory');
 	}
 
-	const errors = await response.json()
-	return json<ActionData>({ errors }, { status: 400 })
-}
+	const errors = await response.json();
+	return json<ActionData>({ errors }, { status: 400 });
+};
 
 export default function CreatePackageForm(): JSX.Element {
-	const { packages, packageTags, items, uoms, orders, error } =
-		useLoaderData<LoaderData>()
-	const formRef = React.useRef<HTMLFormElement>(null)
-	const quantityRef = React.useRef<HTMLInputElement>(null)
-	const priceRef = React.useRef<HTMLInputElement>(null)
+	const {
+		packages,
+		packageTags,
+		items,
+		uoms,
+		orders,
+		facilityLocations,
+		error,
+	} = useLoaderData<LoaderData>();
+	const formRef = React.useRef<HTMLFormElement>(null);
+	const quantityRef = React.useRef<HTMLInputElement>(null);
+	const priceRef = React.useRef<HTMLInputElement>(null);
 	// selected parent package state
 	const [selectedParentPackage, setSelectedParentPackage] =
-		useState<ActivePackageWithLabs | null>(null)
+		useState<ActivePackageWithLabs | null>(null);
 	// combobox search query state
-	const [parentQuery, setParentQuery] = useState<string>('')
+	const [parentQuery, setParentQuery] = useState<string>('');
 
-	const [selectedItem, setSelectedItem] = useState<Item | null>(null)
-	const [itemQuery, setItemQuery] = useState<string>('')
+	const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+	const [itemQuery, setItemQuery] = useState<string>('');
 
 	const [selectedPackageTag, setSelectedPackageTag] =
-		useState<PackageTag | null>(null)
-	const [packageTagQuery, setPackageTagQuery] = useState<string>('')
+		useState<PackageTag | null>(null);
+	const [packageTagQuery, setPackageTagQuery] = useState<string>('');
 
-	const [quantity, setQuantity] = useState<number>(0)
-	const [uomQuery, setUomQuery] = useState<string>('')
-	const [selectedUom, setSelectedUom] = useState<Uom>(uoms[0])
-	const [newParentQuantity, setNewParentQuantity] = useState<number>(0)
+	const [quantity, setQuantity] = useState<number>(0);
+	const [uomQuery, setUomQuery] = useState<string>('');
+	const [selectedUom, setSelectedUom] = useState<Uom>(uoms[0]);
+	const [newParentQuantity, setNewParentQuantity] = useState<number>(0);
 
-	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-	const [pricePerUnit, setPricePerUnit] = useState<number>(0)
+	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+	const [pricePerUnit, setPricePerUnit] = useState<number>(0);
+
+	const [selectedFacilityLocation, setSelectedFacilityLocation] =
+		useState<FacilityLocation | null>(null);
+	const [facilityLocationQuery, setFacilityLocationQuery] =
+		useState<string>('');
 
 	// $: if ($selectedParentPackage && $selectedUom.name) {
 	// 	parentNewQuantity =
@@ -302,8 +350,8 @@ export default function CreatePackageForm(): JSX.Element {
 					selectedUom,
 					childQuantity: Number.parseFloat(inputQuantity),
 				}),
-		)
-	}
+		);
+	};
 
 	// function calculateNewParentQuantity() {
 	// 	setNewParentQuantity(selectedParentPackage?.quantity - quantity)
@@ -331,44 +379,69 @@ export default function CreatePackageForm(): JSX.Element {
 			change: '4.05%',
 			changeType: 'decrease',
 		},
-	]
+	];
 
 	// combobox filter for tag number to assign new package
-	const filteredTags =
-		packageTagQuery === ''
-			? packageTags
-			: packageTags.filter((packageTag: PackageTag) => {
-					return packageTag.tag_number
-						.toLowerCase()
-						.includes(packageTagQuery.toLowerCase())
-			  })
+	let filteredTags: PackageTag[];
+	if (packageTagQuery === '') {
+		filteredTags = packageTags;
+	} else {
+		filteredTags = packageTags.filter((packageTag: PackageTag) => {
+			return packageTag.tag_number
+				.toLowerCase()
+				.includes(packageTagQuery.toLowerCase());
+		});
+	}
 
 	// combobox filter for parent package to create new package from
-	const filteredPackages: ActivePackageWithLabs[] =
-		parentQuery === ''
-			? packages
-			: packages.filter((parentPackage: ActivePackageWithLabs) => {
-					return parentPackage?.strain_name
-						?.toLowerCase()
-						.includes(parentQuery.toLowerCase())
-			  })
+	let filteredPackages: ActivePackageWithLabs[];
+	if (parentQuery === '') {
+		filteredPackages = packages;
+	} else {
+		filteredPackages = packages.filter(
+			(parentPackage: ActivePackageWithLabs) => {
+				return parentPackage?.strain_name
+					?.toLowerCase()
+					.includes(parentQuery.toLowerCase());
+			},
+		);
+	}
 
 	// combobox filter for item type of new package
-	const filteredItems = selectedParentPackage
-		? items.filter((item: Item) => {
-				return item?.strain_name
-					.toLowerCase()
-					.includes(selectedParentPackage.strain_name.toLowerCase())
-		  })
-		: items
+	let filteredItems: Item[];
+	if (selectedParentPackage) {
+		filteredItems = items.filter((item: Item) => {
+			return item?.strain_name
+				.toLowerCase()
+				.includes(selectedParentPackage.strain_name.toLowerCase());
+		});
+	} else {
+		filteredItems = items;
+	}
 
 	// combobox filter for UoM to assign new package
-	const filteredUoms =
-		uomQuery === ''
-			? uoms
-			: uoms.filter((uom: Uom) => {
-					return uom?.name.toLowerCase().includes(uomQuery.toLowerCase())
-			  })
+	let filteredUoms: Uom[];
+	if (uomQuery === '') {
+		filteredUoms = uoms;
+	} else {
+		filteredUoms = uoms.filter((uom: Uom) =>
+			uom?.name.toLowerCase().includes(uomQuery.toLowerCase()),
+		);
+	}
+
+	// combobox filter for facility location to assign new package
+	let filteredFacilityLocations: FacilityLocation[];
+	if (facilityLocationQuery === '') {
+		filteredFacilityLocations = facilityLocations;
+	} else {
+		filteredFacilityLocations = facilityLocations.filter(
+			(facilityLocation: FacilityLocation) => {
+				return facilityLocation?.name
+					.toLowerCase()
+					.includes(facilityLocationQuery.toLowerCase());
+			},
+		);
+	}
 
 	return (
 		<div className="mx-auto flex px-4 py-4">
@@ -400,7 +473,7 @@ export default function CreatePackageForm(): JSX.Element {
 								<Combobox.Input
 									className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
 									onChange={(event) => {
-										setParentQuery(event.target.value)
+										setParentQuery(event.target.value);
 									}}
 									displayValue={(
 										selectedParentPackage: ActivePackageWithLabs,
@@ -601,7 +674,7 @@ export default function CreatePackageForm(): JSX.Element {
 									<Combobox.Input
 										className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
 										onChange={(event) => {
-											setItemQuery(event.target.value)
+											setItemQuery(event.target.value);
 										}}
 										displayValue={(item: Item) =>
 											item?.strain_name
@@ -769,8 +842,8 @@ export default function CreatePackageForm(): JSX.Element {
 								name="quantity"
 								id="quantity"
 								onChange={(event) => {
-									setQuantity(Number.parseFloat(event.target.value))
-									calculateNewParentQuantity(event.target.value)
+									setQuantity(Number.parseFloat(event.target.value));
+									calculateNewParentQuantity(event.target.value);
 								}}
 								className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 								placeholder="0.0000"
@@ -814,7 +887,7 @@ export default function CreatePackageForm(): JSX.Element {
 							<Combobox.Input
 								className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
 								onChange={(event) => {
-									setPackageTagQuery(event.target.value)
+									setPackageTagQuery(event.target.value);
 								}}
 								displayValue={(selectedPackageTag: PackageTag) =>
 									selectedPackageTag?.tag_number
@@ -888,6 +961,94 @@ export default function CreatePackageForm(): JSX.Element {
 						value={newParentQuantity}
 					/>
 				</div>
+
+				{/* Select Location to Assign Combobox */}
+				<Combobox
+					as="div"
+					value={selectedFacilityLocation}
+					onChange={setSelectedFacilityLocation}>
+					<Combobox.Label className="block text-sm font-medium text-gray-700">
+						Select New Location
+					</Combobox.Label>
+					<div className="relative mt-1">
+						<Combobox.Input
+							className="w-full rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
+							onChange={(event) => {
+								setFacilityLocationQuery(event.target.value);
+							}}
+							displayValue={(selectedFacilityLocation: FacilityLocation) =>
+								selectedFacilityLocation?.name
+									? selectedFacilityLocation?.name
+									: ''
+							}
+						/>
+						{/* Actual input for ComboBox to avoid having to render selection as ID */}
+						<input
+							type="hidden"
+							name="tag-object"
+							value={JSON.stringify(selectedFacilityLocation)}
+						/>
+						{/*  */}
+						<Combobox.Button className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none">
+							<ChevronUpDownIcon
+								className="h-5 w-5 text-gray-400"
+								aria-hidden="true"
+							/>
+						</Combobox.Button>
+
+						{filteredFacilityLocations.length > 0 && (
+							<Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+								{filteredFacilityLocations.map(
+									(location: FacilityLocation, locationIdx: number) => (
+										<Combobox.Option
+											key={locationIdx}
+											value={location}
+											className={({ active }) =>
+												classNames(
+													'relative cursor-default select-none py-2 pl-3 pr-9',
+													active ? 'bg-indigo-600 text-white' : 'text-gray-900',
+												)
+											}>
+											{({ active, selected }) => (
+												<>
+													<div className="flex">
+														<span
+															className={classNames(
+																'block truncate',
+																selected && 'font-semibold',
+															)}>
+															{location?.name}
+														</span>
+													</div>
+
+													{selected && (
+														<span
+															className={classNames(
+																'absolute inset-y-0 right-0 flex items-center pr-4',
+																active ? 'text-white' : 'text-indigo-600',
+															)}>
+															<CheckIcon
+																className="h-5 w-5"
+																aria-hidden="true"
+															/>
+														</span>
+													)}
+												</>
+											)}
+										</Combobox.Option>
+									),
+								)}
+							</Combobox.Options>
+						)}
+					</div>
+				</Combobox>
+				{/* End Select Location to Assign Combobox */}
+				{/* Location Hidden Input*/}
+				<input
+					type="hidden"
+					name="facility-location-object"
+					value={JSON.stringify(selectedFacilityLocation)}
+				/>
 
 				{/* Select Order to Add Listbox */}
 				<Listbox value={selectedOrder} onChange={setSelectedOrder}>
@@ -984,7 +1145,7 @@ export default function CreatePackageForm(): JSX.Element {
 						name="price"
 						id="price"
 						onChange={(event) => {
-							setPricePerUnit(Number.parseFloat(event.target.value))
+							setPricePerUnit(Number.parseFloat(event.target.value));
 						}}
 						className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
 						placeholder="0.0000"
@@ -1010,22 +1171,22 @@ export default function CreatePackageForm(): JSX.Element {
 				</div>
 			</form>
 		</div>
-	)
+	);
 }
 
 // Error handling below
 export function ErrorBoundary({ error }: { error: Error }): JSX.Element {
-	console.error(error)
+	console.error(error);
 
-	return <div>An unexpected error occurred: {error.message}</div>
+	return <div>An unexpected error occurred: {error.message}</div>;
 }
 
 export function CatchBoundary(): JSX.Element {
-	const caught = useCatch()
+	const caught = useCatch();
 
 	if (caught.status === 404) {
-		return <div>Not found</div>
+		return <div>Not found</div>;
 	}
 
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+	throw new Error(`Unexpected caught response with status: ${caught.status}`);
 }

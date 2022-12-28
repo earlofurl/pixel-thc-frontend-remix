@@ -203,3 +203,19 @@ export type Uom = {
 	name: string
 	abbreviation: string
 }
+
+export type Facility = {
+	id: number
+	created_at: string
+	updated_at: string
+	name: string
+	licenseNumber: string
+}
+
+export type FacilityLocation = {
+	id: number
+	created_at: string
+	updated_at: string
+	name: string
+	facilityId: number
+}

@@ -24,12 +24,13 @@
       "prettier-plugin-tailwindcss"
     ],
     "printWidth": 80,
-    "semi": false,
+    "semi": true,
     "singleAttributePerLine": false,
     "singleQuote": true,
     "tabWidth": 2,
     "trailingComma": "all",
-    "useTabs": true
+    "useTabs": true,
+    "endOfLine": "lf"
   },
   "eslintIgnore": [
     "/node_modules",
