@@ -65,7 +65,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 	);
 
 	const packageTagsResponse = await fetch(
-		`${process.env.API_BASE_URL}/package-tags`,
+		`${process.env.API_BASE_URL}/package-tags?is_assigned=false&limit=20&offset=0`,
 		{
 			method: 'GET',
 			mode: 'cors',
