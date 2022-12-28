@@ -272,6 +272,8 @@ export const action = async ({ request }: ActionArgs) => {
 		lab_test_id: labTestId,
 	});
 
+	// console.log(bodyObject);
+
 	const response = await fetch(`${process.env.API_BASE_URL}/packages`, {
 		method: 'POST',
 		mode: 'cors',
