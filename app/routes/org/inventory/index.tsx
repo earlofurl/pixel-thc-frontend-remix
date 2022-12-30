@@ -1,33 +1,35 @@
-import type { LoaderArgs } from '@remix-run/node'
-import type { ActivePackageWithLabs } from '~/models/types/custom'
-import { authenticator } from '~/auth.server'
-import { SessionObject, sessionStorage } from '~/services/session.server'
-import { json } from '@remix-run/node'
-import { PlusIcon } from '@heroicons/react/20/solid'
-import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react'
-import type { ColumnDef } from '@tanstack/react-table'
-import { createColumnHelper } from '@tanstack/react-table'
-import React from 'react'
-import BasicGroupingTable from '~/components/tables/BasicGroupingTable'
-import PackageTableRowActions from '~/components/tables/PackageTableRowActions'
+import type { LoaderArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
+import type { ActivePackageWithLabs } from '~/models/types/custom';
+import { authenticator } from '~/auth.server';
+import { sessionStorage } from '~/services/session.server';
+import { PlusIcon } from '@heroicons/react/20/solid';
+import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react';
+import type { ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
+import React from 'react';
+import BasicGroupingTable from '~/components/tables/BasicGroupingTable';
+import PackageTableRowActions from '~/components/tables/PackageTableRowActions';
 
-const tableTitle = 'Packages'
-const tableDescription = 'List of all product inventory'
-const columnHelper = createColumnHelper<ActivePackageWithLabs>()
+const tableTitle = 'Packages';
+const tableDescription = 'List of all product inventory';
+const columnHelper = createColumnHelper<ActivePackageWithLabs>();
 
 type LoaderData = {
-	packages: ActivePackageWithLabs[]
-	error: { message: string } | null
-}
+	packages: ActivePackageWithLabs[];
+	error: { message: string } | null;
+};
 
 export const loader = async ({ request }: LoaderArgs) => {
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
-	})
+	});
 
-	const session = await sessionStorage.getSession(request.headers.get('Cookie'))
-	const error = session.get(authenticator.sessionErrorKey)
-	session.set(authenticator.sessionKey, authResponse)
+	const session = await sessionStorage.getSession(
+		request.headers.get('Cookie'),
+	);
+	const error = session.get(authenticator.sessionErrorKey);
+	session.set(authenticator.sessionKey, authResponse);
 
 	const packagesResponse = await fetch(
 		`${process.env.API_BASE_URL}/packages/active/all`,
@@ -41,18 +43,18 @@ export const loader = async ({ request }: LoaderArgs) => {
 				Authorization: `Bearer ${authResponse.access_token}`,
 			},
 		},
-	)
-	const packages = await packagesResponse.json()
+	);
+	const packages = await packagesResponse.json();
 
-	return json<LoaderData>({ packages, error })
-}
+	return json<LoaderData>({ packages, error });
+};
 
 export default function InventoryIndex(): JSX.Element {
-	const { packages, error } = useLoaderData()
-	const navigate = useNavigate()
+	const { packages, error } = useLoaderData();
+	const navigate = useNavigate();
 
 	function handleAddButtonClick() {
-		navigate('create-package')
+		navigate('create-package');
 	}
 
 	// Column structure for table
@@ -90,9 +92,9 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'tagNumber',
 					header: () => <span>Tag Number</span>,
 					cell: (info) => {
-						const value = info.getValue() as string
+						const value = info.getValue() as string;
 						if (value === '') {
-							return <span>-</span>
+							return <span>-</span>;
 						}
 						return (
 							<>
@@ -101,7 +103,7 @@ export default function InventoryIndex(): JSX.Element {
 									{value.slice(19, 24)}
 								</span>
 							</>
-						)
+						);
 					},
 					enableGrouping: false,
 					enableColumnFilter: true,
@@ -111,8 +113,8 @@ export default function InventoryIndex(): JSX.Element {
 				columnHelper.accessor('strain_name', {
 					id: 'strain',
 					cell: (info) => {
-						const value = info.getValue() as string
-						return <span className="fonts font-semibold text-lg">{value}</span>
+						const value = info.getValue() as string;
+						return <span className="fonts text-lg font-semibold">{value}</span>;
 					},
 					header: () => <span>Strain</span>,
 					enableGrouping: true,
@@ -124,9 +126,9 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'testBatch',
 					header: () => <span>Batch</span>,
 					cell: (info) => {
-						const value = info.getValue() as string
+						const value = info.getValue() as string;
 
-						return <span className="fonts font-semibold text-lg">{value}</span>
+						return <span className="fonts text-lg font-semibold">{value}</span>;
 					},
 					enableGrouping: true,
 					enableColumnFilter: true,
@@ -170,9 +172,9 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'quantity',
 					header: () => <span>Quantity</span>,
 					cell: (info) => {
-						const value = info.getValue() as number
+						const value = info.getValue() as number;
 
-						return <span className="fonts font-semibold text-lg">{value}</span>
+						return <span className="fonts text-lg font-semibold">{value}</span>;
 					},
 					enableGrouping: false,
 					enableColumnFilter: false,
@@ -183,9 +185,9 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'uom',
 					header: () => <span>UoM</span>,
 					cell: (info) => {
-						const value = info.getValue() as string
+						const value = info.getValue() as string;
 
-						return <span className="fonts font-semibold text-lg">{value}</span>
+						return <span className="fonts text-lg font-semibold">{value}</span>;
 					},
 					enableGrouping: false,
 					enableColumnFilter: false,
@@ -235,7 +237,24 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 			],
 		}),
-	]
+		columnHelper.group({
+			id: 'notes',
+			enableGrouping: false,
+			enableColumnFilter: false,
+			enableGlobalFilter: false,
+			enableSorting: false,
+			columns: [
+				columnHelper.accessor('notes', {
+					id: 'notes',
+					header: () => <span>Notes</span>,
+					enableGrouping: false,
+					enableColumnFilter: false,
+					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+			],
+		}),
+	];
 
 	return (
 		<div className="flex h-screen flex-col">
@@ -274,25 +293,25 @@ export default function InventoryIndex(): JSX.Element {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 export function ErrorBoundary({
 	error,
 }: {
-	readonly error: Error
+	readonly error: Error;
 }): JSX.Element {
 	// console.error(error);
 
-	return <div>An unexpected error occurred: {error.message}</div>
+	return <div>An unexpected error occurred: {error.message}</div>;
 }
 
 export function CatchBoundary(): JSX.Element {
-	const caught = useCatch()
+	const caught = useCatch();
 
 	if (caught.status === 404) {
-		return <div>Packages not found</div>
+		return <div>Packages not found</div>;
 	}
 
-	throw new Error(`Unexpected caught response with status: ${caught.status}`)
+	throw new Error(`Unexpected caught response with status: ${caught.status}`);
 }

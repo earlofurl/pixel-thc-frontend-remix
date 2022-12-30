@@ -1,11 +1,16 @@
-import { Popover, Transition } from '@headlessui/react'
-import { ChevronDownIcon } from '@heroicons/react/24/solid'
+import { Popover, Transition } from '@headlessui/react';
 import {
 	RectangleGroupIcon,
 	RectangleStackIcon,
-} from '@heroicons/react/20/solid'
-import { useCatch } from '@remix-run/react'
-import type { ColumnDef } from '@tanstack/react-table'
+} from '@heroicons/react/20/solid';
+import { ChevronDownIcon } from '@heroicons/react/24/solid';
+import { useCatch } from '@remix-run/react';
+import {
+	compareItems,
+	type RankingInfo,
+	rankItem,
+} from '@tanstack/match-sorter-utils';
+import type { ColumnDef } from '@tanstack/react-table';
 import {
 	type Column,
 	type ColumnFiltersState,
@@ -25,51 +30,46 @@ import {
 	type SortingState,
 	type Table,
 	useReactTable,
-} from '@tanstack/react-table'
-import {
-	compareItems,
-	type RankingInfo,
-	rankItem,
-} from '@tanstack/match-sorter-utils'
-import React, { Fragment } from 'react'
+} from '@tanstack/react-table';
+import React, { Fragment } from 'react';
 
 declare module '@tanstack/table-core' {
 	type FilterFns = {
-		fuzzy: FilterFn<unknown>
-	}
+		fuzzy: FilterFn<unknown>;
+	};
 
 	type FilterMeta = {
-		itemRank: RankingInfo
-	}
+		itemRank: RankingInfo;
+	};
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
 	// Rank the item
-	const itemRank = rankItem(row.getValue(columnId), value)
+	const itemRank = rankItem(row.getValue(columnId), value);
 
 	// Store the itemRank info
 	addMeta({
 		itemRank,
-	})
+	});
 
 	// Return if the item should be filtered in/out
-	return itemRank.passed
-}
+	return itemRank.passed;
+};
 
 const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
-	let dir = 0
+	let dir = 0;
 
 	// Only sort by rank if the column has ranking information
 	if (rowA.columnFiltersMeta[columnId]) {
 		dir = compareItems(
 			rowA.columnFiltersMeta[columnId]?.itemRank!,
 			rowB.columnFiltersMeta[columnId]?.itemRank!,
-		)
+		);
 	}
 
 	// Provide an alphanumeric fallback for when the item ranks are equal
-	return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir
-}
+	return dir === 0 ? sortingFns.alphanumeric(rowA, rowB, columnId) : dir;
+};
 
 export default function BasicGroupingTable({
 	tableTitle,
@@ -78,21 +78,21 @@ export default function BasicGroupingTable({
 	tableData,
 }): JSX.Element {
 	const columns: readonly ColumnDef<object>[] = React.useMemo(() => {
-		return columnData
-	}, [columnData])
+		return columnData;
+	}, [columnData]);
 
 	const data: readonly object[] = React.useMemo(() => {
-		return tableData
-	}, [tableData])
+		return tableData;
+	}, [tableData]);
 
 	// const initialState = { hiddenColumns: ["id"] };
-	const [grouping, setGrouping] = React.useState<GroupingState>([])
+	const [grouping, setGrouping] = React.useState<GroupingState>([]);
 
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
 		[],
-	)
-	const [globalFilter, setGlobalFilter] = React.useState('')
-	const [sorting, setSorting] = React.useState<SortingState>([])
+	);
+	const [globalFilter, setGlobalFilter] = React.useState('');
+	const [sorting, setSorting] = React.useState<SortingState>([]);
 
 	const table = useReactTable({
 		data,
@@ -102,7 +102,7 @@ export default function BasicGroupingTable({
 		},
 		initialState: {
 			columnVisibility: {
-				id: false,
+				id: true,
 			},
 		},
 		state: {
@@ -124,7 +124,7 @@ export default function BasicGroupingTable({
 		getFacetedRowModel: getFacetedRowModel(),
 		getFacetedUniqueValues: getFacetedUniqueValues(),
 		getFacetedMinMaxValues: getFacetedMinMaxValues(),
-	})
+	});
 
 	return (
 		<div className="px-2 sm:px-3 lg:px-4">
@@ -254,7 +254,9 @@ export default function BasicGroupingTable({
 										<tr
 											{...{
 												className:
-													rowIdx % 2 === 0 ? "whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900" : "whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900 bg-gray-50",
+													rowIdx % 2 === 0
+														? 'whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900'
+														: 'whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900 bg-gray-50',
 											}}
 											// className="whitespace-nowrap px-2 py-3.5 text-right text-sm font-medium text-gray-900"
 											key={row.id}>
@@ -339,21 +341,21 @@ export default function BasicGroupingTable({
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 function Filter({
 	column,
 	table,
 }: {
-	column: Column<any, unknown>
-	table: Table<any>
+	column: Column<any, unknown>;
+	table: Table<any>;
 }) {
 	const firstValue = table
 		.getPreFilteredRowModel()
-		.flatRows[0]?.getValue(column.id)
+		.flatRows[0]?.getValue(column.id);
 
-	const columnFilterValue = column.getFilterValue()
+	const columnFilterValue = column.getFilterValue();
 
 	const sortedUniqueValues = React.useMemo(
 		() =>
@@ -361,7 +363,7 @@ function Filter({
 				? []
 				: Array.from(column.getFacetedUniqueValues().keys()).sort(),
 		[column.getFacetedUniqueValues()],
-	)
+	);
 
 	return typeof firstValue === 'number' ? (
 		<div>
@@ -416,7 +418,7 @@ function Filter({
 			/>
 			<div className="h-1" />
 		</>
-	)
+	);
 }
 
 // A debounced input react component
@@ -426,23 +428,23 @@ function DebouncedInput({
 	debounce = 500,
 	...props
 }: {
-	value: string | number
-	onChange: (value: string | number) => void
-	debounce?: number
+	value: string | number;
+	onChange: (value: string | number) => void;
+	debounce?: number;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
-	const [value, setValue] = React.useState(initialValue)
+	const [value, setValue] = React.useState(initialValue);
 
 	React.useEffect(() => {
-		setValue(initialValue)
-	}, [initialValue])
+		setValue(initialValue);
+	}, [initialValue]);
 
 	React.useEffect(() => {
 		const timeout = setTimeout(() => {
-			onChange(value)
-		}, debounce)
+			onChange(value);
+		}, debounce);
 
-		return () => clearTimeout(timeout)
-	}, [value])
+		return () => clearTimeout(timeout);
+	}, [value]);
 
 	return (
 		<input
@@ -450,21 +452,21 @@ function DebouncedInput({
 			value={value}
 			onChange={(e) => setValue(e.target.value)}
 		/>
-	)
+	);
 }
 
 export function ErrorBoundary({ error }: { error: Error }): JSX.Element {
-	return <div>An unexpected error occurred: {error.message}</div>
+	return <div>An unexpected error occurred: {error.message}</div>;
 }
 
 export function CatchBoundary(): JSX.Element {
-	const caught = useCatch()
+	const caught = useCatch();
 
 	if (caught.status === 404) {
-		return <div>Table not found</div>
+		return <div>Table not found</div>;
 	}
 
 	throw new Error(
 		`Unexpected caught response with status: ${caught.status as number}`,
-	)
+	);
 }
