@@ -225,6 +225,8 @@ export const action = async ({ request }: ActionArgs) => {
 		body.get('facility-location-object') as string,
 	).id;
 
+	const notes = body.get('notes') as string;
+
 	// const newParentQuantity = body.get('new-parent-quantity') as string
 
 	// const cookieHeader = request.headers.get('Cookie')
@@ -237,7 +239,7 @@ export const action = async ({ request }: ActionArgs) => {
 		package_type: packageType,
 		is_active: true,
 		quantity: quantity,
-		notes: '',
+		notes: notes,
 		// packaged_date_time: dayjs().format('YYYY-MM-DDTHH:mm:ss[Z]Z'),
 		packaged_date_time: '2022-12-18T03:51:39.178012Z',
 		harvest_date_time: harvestDate,
@@ -311,6 +313,7 @@ export default function CreatePackageForm(): JSX.Element {
 	const formRef = React.useRef<HTMLFormElement>(null);
 	const quantityRef = React.useRef<HTMLInputElement>(null);
 	const priceRef = React.useRef<HTMLInputElement>(null);
+	const notesRef = React.useRef<HTMLInputElement>(null);
 	// selected parent package state
 	const [selectedParentPackage, setSelectedParentPackage] =
 		useState<ActivePackageWithLabs | null>(null);
@@ -1175,6 +1178,23 @@ export default function CreatePackageForm(): JSX.Element {
 				</div>
 				<input type="hidden" name="price-per-unit" value={pricePerUnit} />
 				{/* End Price per Unit Input*/}
+
+				{/* Text Input for Notes */}
+				<label
+					htmlFor="notes"
+					className="block text-sm font-medium text-gray-700">
+					Notes
+				</label>
+				<div className="mt-1">
+					<input
+						type="text"
+						name="notes"
+						id="notes"
+						ref={notesRef}
+						className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+					/>
+				</div>
+				{/* End Text Input for Notes*/}
 
 				<div className="pt-5">
 					<div className="flex justify-end">
