@@ -568,6 +568,26 @@ export default function CreatePackageForm(): JSX.Element {
 																	{`${parentPackage?.thc_total_percent}%`}
 																</span>
 															</div>
+															<div className="mt-1 flex">
+																<span
+																	className={classNames(
+																		'ml-2 truncate text-gray-500',
+																		active
+																			? 'text-indigo-200'
+																			: 'text-gray-500',
+																	)}>
+																	{parentPackage?.quantity}
+																</span>
+																<span
+																	className={classNames(
+																		'ml-2 truncate text-gray-500',
+																		active
+																			? 'text-indigo-200'
+																			: 'text-gray-500',
+																	)}>
+																	{`${parentPackage?.uom_abbreviation}`}
+																</span>
+															</div>
 
 															{selected && (
 																<span
