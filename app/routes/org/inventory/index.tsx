@@ -1,15 +1,15 @@
 import type { LoaderArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import type { ActivePackageWithLabs } from '~/models/types/custom';
-import { authenticator } from '~/auth.server';
-import { sessionStorage } from '~/services/session.server';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import React from 'react';
+import { authenticator } from '~/auth.server';
 import BasicGroupingTable from '~/components/tables/BasicGroupingTable';
 import PackageTableRowActions from '~/components/tables/PackageTableRowActions';
+import type { ActivePackageWithLabs } from '~/models/types/custom';
+import { sessionStorage } from '~/services/session.server';
 
 const tableTitle = 'Packages';
 const tableDescription = 'List of all product inventory';
@@ -238,7 +238,7 @@ export default function InventoryIndex(): JSX.Element {
 			],
 		}),
 		columnHelper.group({
-			id: 'notes',
+			id: 'etc',
 			enableGrouping: false,
 			enableColumnFilter: false,
 			enableGlobalFilter: false,
@@ -250,6 +250,14 @@ export default function InventoryIndex(): JSX.Element {
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
+					enableSorting: true,
+				}),
+				columnHelper.accessor('location_name', {
+					id: 'location_name',
+					header: () => <span>Location</span>,
+					enableGrouping: true,
+					enableColumnFilter: true,
+					enableGlobalFilter: true,
 					enableSorting: true,
 				}),
 			],
