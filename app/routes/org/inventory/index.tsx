@@ -64,16 +64,19 @@ export const loader = async ({ request }: LoaderArgs) => {
 	const error = session.get(authenticator.sessionErrorKey);
 	session.set(authenticator.sessionKey, authResponse);
 
-	const packagesResponse = await fetch(`${API_BASE_URL}/packages/active/all`, {
-		method: 'GET',
-		mode: 'cors',
-		credentials: 'include',
-		referrerPolicy: 'strict-origin-when-cross-origin',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${authResponse.access_token}`,
+	const packagesResponse = await fetch(
+		`${process.env.API_BASE_URL}/packages/active/all`,
+		{
+			method: 'GET',
+			mode: 'cors',
+			credentials: 'include',
+			referrerPolicy: 'strict-origin-when-cross-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${authResponse.access_token}`,
+			},
 		},
-	});
+	);
 	const packages = await packagesResponse.json();
 
 	return json<LoaderData>({ packages, error });

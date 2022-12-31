@@ -38,8 +38,6 @@ function classNames(...classes: (string | boolean)[]) {
 }
 
 export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
-	const API_BASE_URL: string = process.env.API_BASE_URL as string;
-
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	});
@@ -50,19 +48,8 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 	const error = session.get(authenticator.sessionErrorKey);
 	session.set(authenticator.sessionKey, authResponse);
 
-	const packagesResponse = await fetch(`${API_BASE_URL}/packages/active/all`, {
-		method: 'GET',
-		mode: 'cors',
-		credentials: 'include',
-		referrerPolicy: 'strict-origin-when-cross-origin',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${authResponse.access_token}`,
-		},
-	});
-
-	const packageTagsResponse = await fetch(
-		`${API_BASE_URL}/package-tags?is_assigned=false&limit=20&offset=0`,
+	const packagesResponse = await fetch(
+		`${process.env.API_BASE_URL}/packages/active/all`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -75,7 +62,21 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 		},
 	);
 
-	const itemsResponse = await fetch(`${API_BASE_URL}/items`, {
+	const packageTagsResponse = await fetch(
+		`${process.env.API_BASE_URL}/package-tags?is_assigned=false&limit=20&offset=0`,
+		{
+			method: 'GET',
+			mode: 'cors',
+			credentials: 'include',
+			referrerPolicy: 'strict-origin-when-cross-origin',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${authResponse.access_token}`,
+			},
+		},
+	);
+
+	const itemsResponse = await fetch(`${process.env.API_BASE_URL}/items`, {
 		method: 'GET',
 		mode: 'cors',
 		credentials: 'include',
@@ -86,7 +87,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 		},
 	});
 
-	const uomsResponse = await fetch(`${API_BASE_URL}/uoms`, {
+	const uomsResponse = await fetch(`${process.env.API_BASE_URL}/uoms`, {
 		method: 'GET',
 		mode: 'cors',
 		credentials: 'include',
@@ -97,7 +98,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 		},
 	});
 
-	const ordersResponse = await fetch(`${API_BASE_URL}/orders`, {
+	const ordersResponse = await fetch(`${process.env.API_BASE_URL}/orders`, {
 		method: 'GET',
 		mode: 'cors',
 		credentials: 'include',
@@ -109,7 +110,7 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 	});
 
 	const facilityLocationsResponse = await fetch(
-		`${API_BASE_URL}/facility-locations`,
+		`${process.env.API_BASE_URL}/facility-locations`,
 		{
 			method: 'GET',
 			mode: 'cors',
@@ -169,8 +170,6 @@ export const loader: LoaderFunction = async ({ request }: LoaderArgs) => {
 };
 
 export const action = async ({ request }: ActionArgs) => {
-	const API_BASE_URL: string = process.env.API_BASE_URL as string;
-
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	});
