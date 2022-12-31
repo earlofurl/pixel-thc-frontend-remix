@@ -1,8 +1,8 @@
+import { PlusIcon } from '@heroicons/react/20/solid';
 import type { LoaderArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { PlusIcon } from '@heroicons/react/20/solid';
 import { Outlet, useCatch, useLoaderData, useNavigate } from '@remix-run/react';
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef, Row } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
 import React from 'react';
 import { authenticator } from '~/auth.server';
@@ -20,7 +20,40 @@ type LoaderData = {
 	error: { message: string } | null;
 };
 
+type TableRowActionsProps = {
+	row: Row<ActivePackageWithLabs>;
+};
+
+const tableRowActions = (props: TableRowActionsProps) => (
+	<PackageTableRowActions {...props} />
+);
+
+const tagNumberCellFormat = (tagNumber: string) => {
+	if (tagNumber === '') {
+		return <span>-</span>;
+	}
+	return <span className="fonts font-semibold">{tagNumber.slice(19, 24)}</span>;
+};
+
+const strainNameCellFormat = (strainName: string) => {
+	return <span className="fonts text-lg font-semibold">{strainName}</span>;
+};
+
+const batchCodeCellFormat = (batchCode: string) => {
+	return <span className="fonts text-lg font-semibold">{batchCode}</span>;
+};
+
+const quantityCellFormat = (quantity: number) => {
+	return <span className="fonts text-lg font-semibold">{quantity}</span>;
+};
+
+const uomCellFormat = (uom: string) => {
+	return <span className="fonts text-lg font-semibold">{uom}</span>;
+};
+
 export const loader = async ({ request }: LoaderArgs) => {
+	const API_BASE_URL: string = process.env.API_BASE_URL as string;
+
 	const authResponse = await authenticator.isAuthenticated(request, {
 		failureRedirect: '/login',
 	});
@@ -31,19 +64,16 @@ export const loader = async ({ request }: LoaderArgs) => {
 	const error = session.get(authenticator.sessionErrorKey);
 	session.set(authenticator.sessionKey, authResponse);
 
-	const packagesResponse = await fetch(
-		`${process.env.API_BASE_URL}/packages/active/all`,
-		{
-			method: 'GET',
-			mode: 'cors',
-			credentials: 'include',
-			referrerPolicy: 'strict-origin-when-cross-origin',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${authResponse.access_token}`,
-			},
+	const packagesResponse = await fetch(`${API_BASE_URL}/packages/active/all`, {
+		method: 'GET',
+		mode: 'cors',
+		credentials: 'include',
+		referrerPolicy: 'strict-origin-when-cross-origin',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${authResponse.access_token}`,
 		},
-	);
+	});
 	const packages = await packagesResponse.json();
 
 	return json<LoaderData>({ packages, error });
@@ -61,13 +91,7 @@ export default function InventoryIndex(): JSX.Element {
 	const columnData: ColumnDef<ActivePackageWithLabs>[] = [
 		columnHelper.display({
 			id: 'actions',
-			cell: (props) => (
-				<>
-					<div className="flex justify-center">
-						<PackageTableRowActions row={props.row} />
-					</div>
-				</>
-			),
+			cell: (props) => tableRowActions({ row: props.row }),
 			enableGrouping: false,
 			enableColumnFilter: false,
 			enableGlobalFilter: false,
@@ -82,7 +106,7 @@ export default function InventoryIndex(): JSX.Element {
 			columns: [
 				columnHelper.accessor('id', {
 					id: 'id',
-					header: () => <span>ID</span>,
+					header: 'ID',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -90,20 +114,10 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('tag_number', {
 					id: 'tagNumber',
-					header: () => <span>Tag Number</span>,
+					header: 'Tag Number',
 					cell: (info) => {
 						const value = info.getValue() as string;
-						if (value === '') {
-							return <span>-</span>;
-						}
-						return (
-							<>
-								{/*<span>{value.slice(0, 19)}</span>*/}
-								<span className="fonts font-semibold">
-									{value.slice(19, 24)}
-								</span>
-							</>
-						);
+						return tagNumberCellFormat(value);
 					},
 					enableGrouping: false,
 					enableColumnFilter: true,
@@ -114,9 +128,9 @@ export default function InventoryIndex(): JSX.Element {
 					id: 'strain',
 					cell: (info) => {
 						const value = info.getValue() as string;
-						return <span className="fonts text-lg font-semibold">{value}</span>;
+						return strainNameCellFormat(value);
 					},
-					header: () => <span>Strain</span>,
+					header: 'Strain',
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
@@ -124,11 +138,10 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('batch_code', {
 					id: 'testBatch',
-					header: () => <span>Batch</span>,
+					header: 'Batch',
 					cell: (info) => {
 						const value = info.getValue() as string;
-
-						return <span className="fonts text-lg font-semibold">{value}</span>;
+						return batchCodeCellFormat(value);
 					},
 					enableGrouping: true,
 					enableColumnFilter: true,
@@ -137,7 +150,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('product_form', {
 					id: 'productForm',
-					header: () => <span>Form</span>,
+					header: 'Form',
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
@@ -145,7 +158,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('product_modifier', {
 					id: 'productModifier',
-					header: () => <span>Modifier</span>,
+					header: 'Modifier',
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
@@ -153,7 +166,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('strain_type', {
 					id: 'type',
-					header: () => <span>Type</span>,
+					header: 'Type',
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
@@ -170,11 +183,10 @@ export default function InventoryIndex(): JSX.Element {
 			columns: [
 				columnHelper.accessor('quantity', {
 					id: 'quantity',
-					header: () => <span>Quantity</span>,
+					header: 'Quantity',
 					cell: (info) => {
 						const value = info.getValue() as number;
-
-						return <span className="fonts text-lg font-semibold">{value}</span>;
+						return quantityCellFormat(value);
 					},
 					enableGrouping: false,
 					enableColumnFilter: false,
@@ -183,11 +195,10 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('uom_abbreviation', {
 					id: 'uom',
-					header: () => <span>UoM</span>,
+					header: 'UOM',
 					cell: (info) => {
 						const value = info.getValue() as string;
-
-						return <span className="fonts text-lg font-semibold">{value}</span>;
+						return uomCellFormat(value);
 					},
 					enableGrouping: false,
 					enableColumnFilter: false,
@@ -205,7 +216,7 @@ export default function InventoryIndex(): JSX.Element {
 			columns: [
 				columnHelper.accessor('thc_total_percent', {
 					id: 'thc',
-					header: () => <span>THC</span>,
+					header: 'THC',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -213,7 +224,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('cbd_percent', {
 					id: 'cbd',
-					header: () => <span>CBD</span>,
+					header: 'CBD',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -221,7 +232,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('terpene_total_percent', {
 					id: 'terpenes',
-					header: () => <span>Terps</span>,
+					header: 'Terps',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -229,7 +240,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('total_cannabinoid_percent', {
 					id: 'totalCannabinoids',
-					header: () => <span>Total Cannabinoids</span>,
+					header: 'Total Cannabinoids',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -246,7 +257,7 @@ export default function InventoryIndex(): JSX.Element {
 			columns: [
 				columnHelper.accessor('notes', {
 					id: 'notes',
-					header: () => <span>Notes</span>,
+					header: 'Notes',
 					enableGrouping: false,
 					enableColumnFilter: false,
 					enableGlobalFilter: false,
@@ -254,7 +265,7 @@ export default function InventoryIndex(): JSX.Element {
 				}),
 				columnHelper.accessor('location_name', {
 					id: 'location_name',
-					header: () => <span>Location</span>,
+					header: 'Location',
 					enableGrouping: true,
 					enableColumnFilter: true,
 					enableGlobalFilter: true,
@@ -309,8 +320,6 @@ export function ErrorBoundary({
 }: {
 	readonly error: Error;
 }): JSX.Element {
-	// console.error(error);
-
 	return <div>An unexpected error occurred: {error.message}</div>;
 }
 
