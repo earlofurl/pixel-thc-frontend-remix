@@ -1,8 +1,8 @@
-import { Fragment } from 'react'
-import { Menu, Transition } from '@headlessui/react'
-import type { ActivePackageWithLabs } from '~/models/types/custom'
-import { Link, useNavigate } from '@remix-run/react'
-import { Row } from '@tanstack/react-table'
+import { Fragment } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import type { ActivePackageWithLabs } from '~/models/types/custom';
+import { Link, useNavigate } from '@remix-run/react';
+import { Row } from '@tanstack/react-table';
 import {
 	ArrowRightCircleIcon,
 	ArrowRightOnRectangleIcon,
@@ -11,32 +11,26 @@ import {
 	PlusIcon,
 	TagIcon,
 	TrashIcon,
-} from '@heroicons/react/20/solid'
+} from '@heroicons/react/20/solid';
 
 function classNames(
 	...classes: readonly (string | undefined)[]
 ): string | undefined {
-	return classes.filter(Boolean).join(' ')
+	return classes.filter(Boolean).join(' ');
 }
 
 export default function PackageTableRowActions({
 	row,
 }: {
-	row: Row<ActivePackageWithLabs>
+	row: Row<ActivePackageWithLabs>;
 }): JSX.Element {
-	const navigate = useNavigate()
+	const navigate = useNavigate();
 
 	function handleCreateFromButtonClick() {
 		return navigate('create-package', {
 			state: { selectedParentPackageId: row.original.id },
-		})
+		});
 	}
-
-	// function handleAssignTagButtonClick() {
-	//   return navigate("assign-tag", {
-	//     state: { selectedParentPackageId: row.original.id },
-	//   });
-	// }
 
 	return (
 		<Menu as="div" className="relative items-center">
@@ -165,5 +159,5 @@ export default function PackageTableRowActions({
 				</Menu.Items>
 			</Transition>
 		</Menu>
-	)
+	);
 }

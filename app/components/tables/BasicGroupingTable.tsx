@@ -84,8 +84,7 @@ export default function BasicGroupingTable({
 	const data: readonly object[] = React.useMemo(() => {
 		return tableData;
 	}, [tableData]);
-
-	// const initialState = { hiddenColumns: ["id"] };
+	
 	const [grouping, setGrouping] = React.useState<GroupingState>([]);
 
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -152,20 +151,6 @@ export default function BasicGroupingTable({
 						leaveFrom="transform opacity-100 scale-100"
 						leaveTo="transform opacity-0 scale-95">
 						<Popover.Panel className="z-60 absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-							{/* <div className="grid grid-cols-1">*/}
-							{/*  {columns.map((column) => (*/}
-							{/*    <div key={column.id} className="text-left text-base">*/}
-							{/*      <label className="block text-sm font-medium text-gray-700">*/}
-							{/*        <input*/}
-							{/*          type="checkbox"*/}
-							{/*          /!*{...column.getToggleHiddenProps()}*!/*/}
-							{/*        />{" "}*/}
-							{/*        {column.id}*/}
-							{/*      </label>*/}
-							{/*    </div>*/}
-							{/*  ))}*/}
-							{/*  <br />*/}
-							{/* </div>*/}
 						</Popover.Panel>
 					</Transition>
 				</Popover>
@@ -178,7 +163,7 @@ export default function BasicGroupingTable({
 							<div>
 								<DebouncedInput
 									value={globalFilter ?? ''}
-									onChange={(value) => setGlobalFilter(String(value))}
+									onChange={(value) => { setGlobalFilter(String(value)); }}
 									className="font-lg border-block border p-2 shadow"
 									placeholder="Search all columns..."
 								/>
@@ -212,10 +197,6 @@ export default function BasicGroupingTable({
 																)}
 															</button>
 														) : null}{' '}
-														{/* {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )} */}
 														<div
 															{...{
 																className: header.column.getCanSort()
@@ -258,7 +239,6 @@ export default function BasicGroupingTable({
 														? 'whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900'
 														: 'whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900 bg-gray-50',
 											}}
-											// className="whitespace-nowrap px-2 py-3.5 text-right text-sm font-medium text-gray-900"
 											key={row.id}>
 											{row.getVisibleCells().map((cell) => (
 												<td
@@ -266,8 +246,7 @@ export default function BasicGroupingTable({
 													className="whitespace-nowrap px-2 py-3.5 text-sm font-medium text-gray-900">
 													{cell.getIsGrouped() ? (
 														// If it's a grouped cell, add an expander and row count
-														<>
-															<button
+														<button
 																type="button"
 																{...{
 																	onClick: row.getToggleExpandedHandler(),
@@ -284,7 +263,6 @@ export default function BasicGroupingTable({
 																)}{' '}
 																({row.subRows.length})
 															</button>
-														</>
 													) : cell.getIsAggregated() ? (
 														// If the cell is aggregated, use the Aggregated
 														// renderer for cell
@@ -304,36 +282,6 @@ export default function BasicGroupingTable({
 											))}
 										</tr>
 									))}
-
-									{/* Edit Button */}
-									{/* <td className="relative inline-flex content-evenly py-3 pl-3 pr-3 sm:pr-6">*/}
-									{/*  <span className="px-1">*/}
-									{/*    <Link*/}
-									{/*      to={`${row.values.id}/edit`}*/}
-									{/*      // className='text-indigo-600 hover:text-indigo-900'*/}
-									{/*    >*/}
-									{/*      <PencilAltIcon className="h-6 w-6 text-blue-500" />*/}
-									{/*    </Link>*/}
-									{/*  </span>*/}
-									{/*  <span className="px-1">*/}
-									{/*    <Link*/}
-									{/*      to={`${row.values.id}/delete`}*/}
-									{/*      // className='text-indigo-600 hover:text-indigo-900'*/}
-									{/*    >*/}
-									{/*      <TrashIcon className="h-6 w-6 text-red-500" />*/}
-									{/*    </Link>*/}
-									{/*  </span>*/}
-									{/*  <span className="px-1">*/}
-									{/*    <Link*/}
-									{/*      to={`${row.values.id}`}*/}
-									{/*      // className='text-indigo-600 hover:text-indigo-900'*/}
-									{/*    >*/}
-									{/*      <ClipboardListIcon className="h-6 w-6 text-green-500" />*/}
-									{/*    </Link>*/}
-									{/*  </span>*/}
-									{/* </td>*/}
-									{/*  </tr>*/}
-									{/* ))}*/}
 								</tbody>
 							</table>
 						</div>
@@ -467,6 +415,6 @@ export function CatchBoundary(): JSX.Element {
 	}
 
 	throw new Error(
-		`Unexpected caught response with status: ${caught.status as number}`,
+		`Unexpected caught response with status: ${caught.status}`,
 	);
 }
