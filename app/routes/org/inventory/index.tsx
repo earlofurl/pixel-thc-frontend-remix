@@ -11,6 +11,8 @@ import PackageTableRowActions from '~/components/tables/PackageTableRowActions';
 import type { ActivePackageWithLabs } from '~/models/types/custom';
 import { sessionStorage } from '~/services/session.server';
 
+const API_BASE_URL: string = process.env.API_BASE_URL as string;
+
 const tableTitle = 'Packages';
 const tableDescription = 'List of all product inventory';
 const columnHelper = createColumnHelper<ActivePackageWithLabs>();
