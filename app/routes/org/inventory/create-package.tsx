@@ -248,7 +248,7 @@ export const action = async ({ request }: ActionArgs) => {
 		lab_test_id: parsedParentPackageObject.lab_test_id,
 	});
 
-	const response = await fetch(`${API_BASE_URL}/packages`, {
+	const response = await fetch(`${process.env.API_BASE_URL}/packages`, {
 		method: 'POST',
 		mode: 'cors',
 		credentials: 'include',
