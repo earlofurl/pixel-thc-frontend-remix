@@ -1,9 +1,8 @@
 import type { LoaderArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useCatch, useLoaderData } from '@remix-run/react';
+import { Outlet, useCatch, useLoaderData } from '@remix-run/react';
 import React from 'react';
 import { authenticator } from '~/auth.server';
-import BackendDash from '~/components/layout/BackendDash';
 import { sessionStorage } from '~/services/session.server';
 
 type LoaderData = {
@@ -28,8 +27,8 @@ export default function Locations(): JSX.Element {
 
   return (
     <>
-      <BackendDash />
       {error ? <div>{error.message}</div> : <h2>Locations</h2>}
+      <Outlet />
     </>
   );
 }

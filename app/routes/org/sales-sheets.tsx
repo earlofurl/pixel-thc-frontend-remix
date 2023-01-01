@@ -1,9 +1,9 @@
-import { json, LoaderArgs } from '@remix-run/node';
+import type { LoaderArgs } from '@remix-run/node';
+import { json } from '@remix-run/node';
+import { Outlet, useCatch, useLoaderData } from '@remix-run/react';
+import React from 'react';
 import { authenticator } from '~/auth.server';
 import { sessionStorage } from '~/services/session.server';
-import { useCatch, useLoaderData } from '@remix-run/react';
-import BackendDash from '~/components/layout/BackendDash';
-import React from 'react';
 
 type LoaderData = {
   error: { message: string } | null;
@@ -27,7 +27,7 @@ export default function SalesSheets(): JSX.Element {
 
   return (
     <>
-      <BackendDash />
+      <Outlet />
       {error ? <div>{error.message}</div> : <h2>Sales Sheets</h2>}
     </>
   );
