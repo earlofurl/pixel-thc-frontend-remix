@@ -5,7 +5,7 @@ import {
   DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { Command } from 'cmdk';
-import React, { ChangeEvent } from 'react';
+import React from 'react';
 
 export default function PackageCMDK({
   packages,
@@ -17,45 +17,56 @@ export default function PackageCMDK({
     packages[0],
   );
 
-  // function handlePackageSelect(value: string) {
-  //   const selectedPackage = packages.find((pkg) => pkg.tag_number === value);
-  //   if (selectedPackage) {
-  //     setPackageData(selectedPackage);
-  //   }
-  // }
+  const handleListItemSelect = (tagNumber: string) => {
+    const packageData = packages.find(
+      (packageData) => packageData.tag_number === tagNumber,
+    );
+    if (packageData) {
+      setPackageData(packageData);
+      setSearch(tagNumber);
+    } else {
+      setPackageData(packages[0]);
+      setSearch(packages[0].tag_number);
+    }
+  };
 
   return (
     <div>
       <Command
         className={classNames(
           'cmdk-root:border-radius-16 cmdk-root:border-1 p-2 cmdk-root:w-full',
-          'cmdk-root:max-w-screen-sm cmdk-root:overflow-hidden cmdk-root:border-gray-600 cmdk-root:bg-white',
+          'cmdk-root:max-w-screen-lg cmdk-root:overflow-hidden cmdk-root:border-gray-600 cmdk-root:bg-gray-100',
+          'cmdk-separator:my-2 cmdk-separator:h-px cmdk-separator:w-full cmdk-separator:bg-gray-600',
         )}>
         {/* Header */}
         <div className="border-b-1 mb-3 flex h-12 items-center gap-8 border-b-gray-500 p-8 pb-2">
           <MagnifyingGlassIcon className="max-w-6 max-h-6" />
           <Command.Input
             autoFocus
-            value={search}
-            onValueChange={setSearch}
             placeholder="Find packages"
+            value={search}
+            onValueChange={(value: string) => {
+              setSearch(value);
+            }}
             className={classNames(
               'cmdk-input:w-full cmdk-input:border-none cmdk-input:text-base',
               'cmdk-input:text-gray-900 cmdk-input:outline-none',
             )}
           />
         </div>
-        <Command.List>
+        <Command.List className="cmdk-list:overflow-auto">
           <div className="min-h-24 flex max-h-64">
             {/* Left Section */}
-            <div className="w-2/5 overflow-scroll">
-              <Command.Group heading="Packages">
+            <div className="w-2/5 overflow-y-scroll">
+              <Command.Group
+                heading="Packages"
+                className="mb-2 flex select-none items-center p-4 text-xs text-gray-700">
                 {packages.map((pkg: ActivePackageWithLabs) => (
                   <Item
                     key={pkg.id}
                     value={pkg.tag_number}
                     onSelect={() => {
-                      setPackageData(pkg);
+                      handleListItemSelect(pkg.tag_number);
                     }}
                   />
                 ))}
@@ -63,11 +74,16 @@ export default function PackageCMDK({
             </div>
             <hr className="mr-2 w-px bg-gray-600" />
             {/* Right Section */}
-            <div
-              className={classNames(
-                'ml-2 flex w-3/5 items-center justify-center rounded-lg',
-              )}>
-              {JSON.stringify(packageData)}
+            <div className={classNames('ml-2 flex w-3/5 rounded-lg')}>
+              <ul>
+                <li>{packageData.tag_number}</li>
+                <li>{packageData.strain_name}</li>
+                <li>{packageData.batch_code}</li>
+                <li>{packageData.thc_total_percent}</li>
+                <li>
+                  {packageData.quantity} {packageData.uom_abbreviation}
+                </li>
+              </ul>
             </div>
           </div>
         </Command.List>
