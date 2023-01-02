@@ -12,7 +12,7 @@ export default function PackageCMDK({
 }: {
   packages: ActivePackageWithLabs[];
 }): JSX.Element {
-  const [search, setSearch] = React.useState(packages[0].tag_number);
+  const [search, setSearch] = React.useState(packages[0].strain_name);
   const [packageData, setPackageData] = React.useState<ActivePackageWithLabs>(
     packages[0],
   );
@@ -64,7 +64,7 @@ export default function PackageCMDK({
                 {packages.map((pkg: ActivePackageWithLabs) => (
                   <Item
                     key={pkg.id}
-                    value={pkg.tag_number}
+                    value={pkg.strain_name}
                     onSelect={() => {
                       handleListItemSelect(pkg.tag_number);
                     }}
